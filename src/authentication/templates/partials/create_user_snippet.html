@@ -1,0 +1,21 @@
+{% load static %}
+
+<!-- Formulaire de création d'utilisateur -->
+<div class="container mt-4">
+    <h2 class="mb-4">Créer un nouvel utilisateur</h2>
+    <div class="card shadow-sm">
+        <div class="card-body p-5">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success">Créer l'utilisateur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

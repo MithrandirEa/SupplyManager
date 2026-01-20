@@ -34,5 +34,14 @@ urlpatterns = [
         name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
 
+    # Routes de la barre de navigation
+    path('staff/', core.views.staff_management, name='staff_management'),
+    path('supplies-management/', core.views.supplies_management, name='supplies_management'),
+    path('suppliers-management/', core.views.suppliers_management, name='suppliers_management'),
+
+    # Routes de gestion des utilisateurs
+    path('create-user/', authentication.views.create_user, name='create_user'),
+    path('change-user/<int:user_id>/', authentication.views.change_user, name='change_user'),
+    path('delete-user/<int:user_id>/', authentication.views.delete_user, name='delete_user'),
 
 ]
