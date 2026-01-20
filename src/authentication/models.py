@@ -1,10 +1,27 @@
 from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.conf import settings
+import re
+
+
+class UsernameWithSpacesValidator(UnicodeUsernameValidator):
+    """Validateur personnalisé autorisant les espaces dans le nom d'utilisateur"""
+    regex = re.compile(r'^[\w\s.@+-]+$')
+    message = 'Entrez un nom d\'utilisateur valide. Ce champ peut contenir des lettres, chiffres, espaces et les caractères @/./+/-/_'
 
 
 class User(AbstractUser):
     """Modèle utilisateur unique avec gestion des rôles"""
+    
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[UsernameWithSpacesValidator()],
+        error_messages={
+            'unique': "Un utilisateur avec ce nom existe déjà.",
+        },
+    )
     
     ADMIN = 'ADMIN'
     DIRECTOR = 'DIRECTOR'

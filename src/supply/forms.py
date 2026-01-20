@@ -6,6 +6,14 @@ class CreateItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['name', 'category', 'total_quantity', 'outside_quantity', 'available_quantity', 'information']
+        labels = {
+            'name': 'Nom',
+            'category': 'Catégorie',
+            'total_quantity': 'Quantité totale',
+            'outside_quantity': 'Quantité hors site',
+            'available_quantity': 'Quantité sur site',
+            'information': 'Informations complémentaires',
+        }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
@@ -20,6 +28,14 @@ class ChangeItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['name', 'category', 'total_quantity', 'outside_quantity', 'available_quantity', 'information']
+        labels = {
+            'name': 'Nom',
+            'category': 'Catégorie',
+            'total_quantity': 'Quantité totale',
+            'outside_quantity': 'Quantité hors site',
+            'available_quantity': 'Quantité sur site',
+            'information': 'Informations complémentaires',
+        }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-select'}),

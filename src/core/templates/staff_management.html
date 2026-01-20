@@ -1,10 +1,21 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load auth_extras %}
 
 {% block content %}
 <!-- Affiche la liste des utilisateurs selon leur rôles (Admin, Responsable, Équipe) -->
 <div class="container mt-4">
     <h2 class="mb-4">Gestion du personnel</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
     <div class="mb-3">
         <a href="{% url 'create_user' %}" class="btn btn-success">Créer un nouvel utilisateur</a>
     </div>
@@ -39,13 +50,20 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{% url 'change_user' user_id=user.id %}" class="btn btn-sm btn-primary">Modifier</a>
-                        <button type="button" class="btn btn-sm btn-danger" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteModal{{ user.id }}"
-                                data-username="{{ user.username }}">
-                            Supprimer
-                        </button>
+                        {% if user.role == 'ADMIN' and not request.user|has_group:"Admin" %}
+                            <span class="text-muted small">Réservé aux Admins</span>
+                        {% elif user.id == request.user.id %}
+                            <a href="{% url 'change_user' user_id=user.id %}" class="btn btn-sm btn-primary">Modifier</a>
+                            <span class="text-muted small"></span>
+                        {% else %}
+                            <a href="{% url 'change_user' user_id=user.id %}" class="btn btn-sm btn-primary">Modifier</a>
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal{{ user.id }}"
+                                    data-username="{{ user.username }}">
+                                Supprimer
+                            </button>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

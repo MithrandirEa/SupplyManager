@@ -33,6 +33,7 @@
                 <h1 class="display-6 fw-bolder text-black mb-0"
                 style="text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);">
                 LaundryWatcher
+                <span class="text-success fs-4 mb-0" style="text-shadow: none;">{{ user.username }}</span>
                 </h1>
             </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +41,9 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <div class="navbar-nav fs-4 gap-3 text-end text-lg-start">
+                        {% if request.user|has_group:"Équipe" %}
+                        <a class="nav-link" {% if request.resolver_match.url_name == 'home' %}active fw-bold{%endif %} href="{% url 'home' %}">Accueil</a>
+                        {% endif %}
                         {% if request.user|has_group:"Admin" or request.user|has_group:"Responsable" %}
                         <a class="nav-link" {% if request.resolver_match.url_name == 'staff-management' %}active fw-bold{%endif %} href="{% url 'staff_management' %}">Équipes</a>
                         {% endif %}
