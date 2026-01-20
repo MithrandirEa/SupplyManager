@@ -4,7 +4,10 @@ from .models import Item, ItemsCategory
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'total_quantity', 'outside_quantity', 'available_quantity', 'information', 'created_by', 'created_at')
+    list_display = (
+        'name', 'category', 'total_quantity', 'outside_quantity',
+        'available_quantity', 'information', 'created_by', 'created_at'
+    )
     list_filter = ('category', 'created_at')
     search_fields = ('name', 'category')
     readonly_fields = ('created_at', 'updated_at')

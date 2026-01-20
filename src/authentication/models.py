@@ -6,14 +6,17 @@ import re
 
 
 class UsernameWithSpacesValidator(UnicodeUsernameValidator):
-    """Validateur personnalisé autorisant les espaces dans le nom d'utilisateur"""
+    """Validateur personnalisé autorisant les espaces dans username"""
     regex = re.compile(r'^[\w\s.@+-]+$')
-    message = 'Entrez un nom d\'utilisateur valide. Ce champ peut contenir des lettres, chiffres, espaces et les caractères @/./+/-/_'
+    message = (
+        'Entrez un nom d\'utilisateur valide. Ce champ peut contenir '
+        'des lettres, chiffres, espaces et les caractères @/./+/-/_'
+    )
 
 
 class User(AbstractUser):
     """Modèle utilisateur unique avec gestion des rôles"""
-    
+
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -22,7 +25,7 @@ class User(AbstractUser):
             'unique': "Un utilisateur avec ce nom existe déjà.",
         },
     )
-    
+
     ADMIN = 'ADMIN'
     DIRECTOR = 'DIRECTOR'
     CREW = 'CREW'
@@ -34,36 +37,43 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=15, choices=ROLE_CHOICES, default=CREW)
-    
+
     # Champs communs
     still_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='created_users'
     )
     revoked_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='revoked_users'
     )
-    
+
     # Champs spécifiques CREW
-    date_start_contract = models.DateField(null=True, blank=True, verbose_name="Date début contrat")
-    date_end_contract = models.DateField(null=True, blank=True, verbose_name="Date fin contrat")
+    date_start_contract = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date début contrat"
+    )
+    date_end_contract = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date fin contrat"
+    )
 
     def save(self, *args, **kwargs):
         # Récupérer created_by depuis kwargs si fourni
         created_by_user = kwargs.pop('created_by_user', None)
         if created_by_user and not self.pk and not self.created_by:
             self.created_by = created_by_user
-        
         super().save(*args, **kwargs)
-        
+
         # Ajout automatique au groupe selon le rôle
         self.groups.clear()  # Nettoyer les anciens groupes
         if self.role == self.ADMIN:
@@ -79,7 +89,8 @@ class User(AbstractUser):
         if self.role == self.ADMIN:
             return True  # Admin peut créer n'importe qui
         elif self.role == self.DIRECTOR:
-            return role in [self.DIRECTOR, self.CREW]  # Director peut créer Director ou Crew
+            # Director peut créer Director ou Crew
+            return role in [self.DIRECTOR, self.CREW]
         return False
 
     def __str__(self):

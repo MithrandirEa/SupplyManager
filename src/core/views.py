@@ -28,4 +28,8 @@ def supplies_management(request):
 @permission_required('supplier.view_supplier', raise_exception=True)
 def suppliers_management(request):
     suppliers = Supplier.objects.all().order_by('name')
-    return render(request, 'suppliers_management.html', {'suppliers': suppliers})
+    return render(
+        request,
+        'suppliers_management.html',
+        {'suppliers': suppliers}
+    )

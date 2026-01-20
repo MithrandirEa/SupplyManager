@@ -5,7 +5,10 @@ from .models import Supplier
 class CreateSupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name', 'website', 'contact_email', 'phone_number', 'other_details']
+        fields = [
+            'name', 'website', 'contact_email',
+            'phone_number', 'other_details'
+        ]
         labels = {
             'name': 'Nom',
             'website': 'Site web',
@@ -16,16 +19,25 @@ class CreateSupplierForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'website': forms.URLInput(attrs={'class': 'form-control'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'other_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'contact_email': forms.EmailInput(
+                attrs={'class': 'form-control'}
+            ),
+            'phone_number': forms.TextInput(
+                attrs={'class': 'form-control'}
+            ),
+            'other_details': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3}
+            ),
         }
 
 
 class ChangeSupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name', 'website', 'contact_email', 'phone_number', 'other_details']
+        fields = [
+            'name', 'website', 'contact_email',
+            'phone_number', 'other_details'
+        ]
         labels = {
             'name': 'Nom',
             'website': 'Site web',
@@ -36,7 +48,13 @@ class ChangeSupplierForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'website': forms.URLInput(attrs={'class': 'form-control'}),
-            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'other_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'contact_email': forms.EmailInput(
+                attrs={'class': 'form-control'}
+            ),
+            'phone_number': forms.TextInput(
+                attrs={'class': 'form-control'}
+            ),
+            'other_details': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3}
+            ),
         }
