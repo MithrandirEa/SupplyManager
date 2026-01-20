@@ -19,7 +19,7 @@
                     <th>Site web</th>
                     <th>Email</th>
                     <th>Numéro de téléphone</th>
-                    <th>Adresse</th>
+                    <th>Items associés</th>
                     <th>Informations</th>
                     <th>Actions</th>
                 </tr>
@@ -35,8 +35,14 @@
                         {{ supplier.contact_email }}
                     </td>
                     <td>{{ supplier.phone_number }}</td>
-                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        {{ supplier.address }}
+                    <td>
+                        {% if supplier.associated_items.all %}
+                            {% for item in supplier.associated_items.all %}
+                                <span class="badge bg-info me-1">{{ item.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Aucun</span>
+                        {% endif %}
                     </td>
                     <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         {{ supplier.other_details }}

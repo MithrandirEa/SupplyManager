@@ -14,6 +14,7 @@ class ItemsCategory(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(ItemsCategory, on_delete=models.CASCADE, related_name='items')
+    suppliers = models.ManyToManyField('supplier.Supplier', related_name='items', blank=True)
     total_quantity = models.PositiveIntegerField(default=0)
     outside_quantity = models.PositiveIntegerField(default=0)
     available_quantity = models.PositiveIntegerField(default=0)

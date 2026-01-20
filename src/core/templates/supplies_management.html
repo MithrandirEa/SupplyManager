@@ -20,6 +20,7 @@
                     <th>Quantité totale</th>
                     <th>Quantité hors site</th>
                     <th>Quantité disponible</th>
+                    <th>Fournisseurs</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -31,6 +32,12 @@
                     <td>{{ item.total_quantity }}</td>
                     <td>{{ item.outside_quantity }}</td>
                     <td>{{ item.available_quantity }}</td>
+                    <td>
+                        {% for supplier in item.suppliers.all %}
+                            <span class="badge bg-secondary">{{ supplier.name }}</span>
+                        {% empty %}
+                            <span class="text-muted">Aucun fournisseur</span>
+                        {% endfor %}
                     <td>
                         {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
                         <a href="{% url 'change_item' item_id=item.id %}" class="btn btn-sm btn-primary">Modifier</a>

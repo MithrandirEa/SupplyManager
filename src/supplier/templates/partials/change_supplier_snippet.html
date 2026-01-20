@@ -9,7 +9,43 @@
                 {% csrf_token %}
                 
                 <div class="mb-3">
-                    {{ form.as_p }}
+                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }} :</label>
+                    {{ form.name }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.website.id_for_label }}" class="form-label">{{ form.website.label }} :</label>
+                    {{ form.website }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.contact_email.id_for_label }}" class="form-label">{{ form.contact_email.label }} :</label>
+                    {{ form.contact_email }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.phone_number.id_for_label }}" class="form-label">{{ form.phone_number.label }} :</label>
+                    {{ form.phone_number }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.other_details.id_for_label }}" class="form-label">{{ form.other_details.label }} :</label>
+                    {{ form.other_details }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Items associés :</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#itemSelectionModal">
+                            <i class="bi bi-plus-circle"></i> Sélectionner des items
+                        </button>
+                    </div>
+                    <div id="selectedItemsDisplay" class="mt-2">
+                        <span class="text-muted">Aucun item sélectionné</span>
+                    </div>
+                    <div id="hiddenItemsInputs">
+                        <!-- Les inputs hidden seront ajoutés ici par JavaScript -->
+                    </div>
                 </div>
 
                 <div class="d-grid gap-2">
@@ -19,3 +55,5 @@
         </div>
     </div>
 </div>
+
+{% include 'partials/modal_select_items.html' %}

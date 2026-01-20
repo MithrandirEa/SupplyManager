@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import CreateItemForm, ChangeItemForm
 
 from supply.models import Item
+from supplier.models import Supplier
 
 
 @login_required
@@ -14,11 +15,22 @@ def create_item(request):
             new_item.available_quantity = new_item.total_quantity - new_item.outside_quantity
             new_item.created_by = request.user
             new_item.save()
+            
+            # Récupérer les fournisseurs sélectionnés depuis les inputs hidden
+            selected_suppliers = request.POST.getlist('suppliers')
+            if selected_suppliers:
+                new_item.suppliers.set(selected_suppliers)
+            
             return redirect('supplies_management')
     else:
         form = CreateItemForm()
 
-    return render(request, 'create_item.html', {'form': form})
+    all_suppliers = Supplier.objects.all().order_by('name')
+    return render(request, 'create_item.html', {
+        'form': form, 
+        'all_suppliers': all_suppliers,
+        'selected_supplier_ids': []
+    })
 
 
 @login_required
@@ -30,11 +42,24 @@ def change_item(request, item_id):
             change_item = form.save(commit=False)
             change_item.available_quantity = change_item.total_quantity - change_item.outside_quantity
             change_item.save()
+            
+            # Récupérer les fournisseurs sélectionnés depuis les inputs hidden
+            selected_suppliers = request.POST.getlist('suppliers')
+            change_item.suppliers.set(selected_suppliers)
+            
             return redirect('supplies_management')
     else:
         form = ChangeItemForm(instance=item)
     
-    return render(request, 'change_item.html', {'form': form, 'item': item})
+    all_suppliers = Supplier.objects.all().order_by('name')
+    selected_supplier_ids = list(item.suppliers.values_list('id', flat=True))
+    
+    return render(request, 'change_item.html', {
+        'form': form, 
+        'item': item,
+        'all_suppliers': all_suppliers,
+        'selected_supplier_ids': selected_supplier_ids
+    })
 
 
 @login_required

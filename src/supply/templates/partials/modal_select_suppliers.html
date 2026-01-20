@@ -1,0 +1,101 @@
+<!-- Modale de sélection des fournisseurs -->
+<div class="modal fade" id="supplierSelectionModal" tabindex="-1" aria-labelledby="supplierSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplierSelectionModalLabel">Sélectionner des fournisseurs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    {% for supplier in all_suppliers %}
+                    <label class="list-group-item d-flex align-items-center">
+                        <input class="form-check-input me-3 supplier-checkbox" type="checkbox" value="{{ supplier.id }}" 
+                               id="supplier_{{ supplier.id }}" 
+                               {% if supplier.id in selected_supplier_ids %}checked{% endif %}>
+                        <span>{{ supplier.name }}</span>
+                    </label>
+                    {% empty %}
+                    <p class="text-muted">Aucun fournisseur disponible</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="confirmSupplierSelection">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmSupplierSelection');
+    const modal = document.getElementById('supplierSelectionModal');
+    const bsModal = new bootstrap.Modal(modal);
+    
+    // Fonction pour mettre à jour l'affichage des fournisseurs sélectionnés
+    function updateSelectedDisplay() {
+        const checkboxes = document.querySelectorAll('.supplier-checkbox:checked');
+        const selectedContainer = document.getElementById('selectedSuppliersDisplay');
+        const hiddenContainer = document.getElementById('hiddenSuppliersInputs');
+        
+        // Vider les containers
+        selectedContainer.innerHTML = '';
+        hiddenContainer.innerHTML = '';
+        
+        if (checkboxes.length === 0) {
+            selectedContainer.innerHTML = '<span class="text-muted">Aucun fournisseur sélectionné</span>';
+        } else {
+            checkboxes.forEach(checkbox => {
+                // Créer un badge pour l'affichage
+                const labelElement = checkbox.closest('label');
+                const supplierName = labelElement.querySelector('span').textContent.trim();
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary me-2 mb-2';
+                badge.textContent = supplierName;
+                selectedContainer.appendChild(badge);
+                
+                // Créer un input hidden pour le formulaire
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'suppliers';
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+        }
+    }
+    
+    // Au chargement, initialiser l'affichage
+    updateSelectedDisplay();
+    
+    // Quand on confirme la sélection
+    confirmBtn.addEventListener('click', function() {
+        updateSelectedDisplay();
+        bsModal.hide();
+    });
+    
+    // Quand on ferme la modale sans confirmer, restaurer l'état précédent
+    let previousState = [];
+    modal.addEventListener('show.bs.modal', function() {
+        // Sauvegarder l'état actuel
+        previousState = Array.from(document.querySelectorAll('.supplier-checkbox'))
+            .map(cb => ({ id: cb.id, checked: cb.checked }));
+    });
+    
+    modal.addEventListener('hidden.bs.modal', function(event) {
+        // Si on n'a pas cliqué sur confirmer, restaurer l'état
+        if (!event.target.classList.contains('confirmed')) {
+            previousState.forEach(state => {
+                const checkbox = document.getElementById(state.id);
+                if (checkbox) checkbox.checked = state.checked;
+            });
+        }
+        modal.classList.remove('confirmed');
+    });
+    
+    confirmBtn.addEventListener('click', function() {
+        modal.classList.add('confirmed');
+    });
+});
+</script>

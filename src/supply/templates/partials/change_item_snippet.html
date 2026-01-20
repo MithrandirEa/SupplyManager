@@ -9,7 +9,48 @@
                 {% csrf_token %}
                 
                 <div class="mb-3">
-                    {{ form.as_p }}
+                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }} :</label>
+                    {{ form.name }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }} :</label>
+                    {{ form.category }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fournisseurs :</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#supplierSelectionModal">
+                            <i class="bi bi-plus-circle"></i> Sélectionner des fournisseurs
+                        </button>
+                    </div>
+                    <div id="selectedSuppliersDisplay" class="mt-2">
+                        <span class="text-muted">Aucun fournisseur sélectionné</span>
+                    </div>
+                    <div id="hiddenSuppliersInputs">
+                        <!-- Les inputs hidden seront ajoutés ici par JavaScript -->
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.total_quantity.id_for_label }}" class="form-label">{{ form.total_quantity.label }} :</label>
+                    {{ form.total_quantity }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.outside_quantity.id_for_label }}" class="form-label">{{ form.outside_quantity.label }} :</label>
+                    {{ form.outside_quantity }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.available_quantity.id_for_label }}" class="form-label">{{ form.available_quantity.label }} :</label>
+                    {{ form.available_quantity }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.information.id_for_label }}" class="form-label">{{ form.information.label }} :</label>
+                    {{ form.information }}
                 </div>
 
                 <div class="d-grid gap-2">
@@ -19,3 +60,5 @@
         </div>
     </div>
 </div>
+
+{% include 'partials/modal_select_suppliers.html' %}
