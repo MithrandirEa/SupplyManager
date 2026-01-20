@@ -38,11 +38,6 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <div class="navbar-nav fs-4 gap-3 text-end text-lg-start">
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'home' %}active fw-bold{% endif %} href="{% url 'home' %}">Accueil</a>
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'create_user' %}active fw-bold{% endif %} href="{% url 'create_user' %}">Créer un compte</a>
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'change_user' %}active fw-bold{% endif %} href="{% url 'change_user' user_id=user.id %}">Modifier un compte</a>
-                    </div>
         </div>
     </nav>      
     {% endif %}

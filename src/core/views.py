@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from authentication.models import User
-from supply.models import Item
 from django.contrib.auth.decorators import login_required, permission_required
+
+from supplier.models import Supplier
+from supply.models import Item
 
 
 @login_required
@@ -25,4 +27,5 @@ def supplies_management(request):
 @login_required
 @permission_required('supplier.view_supplier', raise_exception=True)
 def suppliers_management(request):
-    return render(request, 'suppliers_management.html')
+    suppliers = Supplier.objects.all().order_by('name')
+    return render(request, 'suppliers_management.html', {'suppliers': suppliers})

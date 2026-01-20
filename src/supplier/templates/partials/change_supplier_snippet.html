@@ -1,0 +1,21 @@
+{% load static %}
+
+<!-- Formulaire de modification d'un fournisseur -->
+<div class="container mt-4">
+    <h2 class="mb-4">Modifier le fournisseur</h2>
+    <div class="card shadow-sm">
+        <div class="card-body p-5">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success">Modifier le fournisseur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -39,7 +40,9 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <div class="navbar-nav fs-4 gap-3 text-end text-lg-start">
+                        {% if request.user|has_group:"Admin" or request.user|has_group:"Responsable" %}
                         <a class="nav-link" {% if request.resolver_match.url_name == 'staff-management' %}active fw-bold{%endif %} href="{% url 'staff_management' %}">Équipes</a>
+                        {% endif %}
                         <a class="nav-link" {% if request.resolver_match.url_name == 'supplies-management' %}active fw-bold{%endif %} href="{% url 'supplies_management' %}">Matériels</a>
                         <a class="nav-link" {% if request.resolver_match.url_name == 'suppliers-management' %}active fw-bold{%endif %} href="{% url 'suppliers_management' %}">Fournisseurs</a>
                         <form method="post" action="{% url 'logout' %}" class="d-flex justify-content-lg-start">
