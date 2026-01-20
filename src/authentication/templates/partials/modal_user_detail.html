@@ -1,0 +1,83 @@
+{% load static %}
+{% load auth_extras %}
+
+<!-- Modale de détails pour un utilisateur -->
+<div class="modal fade" id="userDetailModal{{ user.id }}" tabindex="-1" 
+     aria-labelledby="userDetailModalLabel{{ user.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="userDetailModalLabel{{ user.id }}">
+                    Détails de l'utilisateur
+                </h5>
+                <button type="button" class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Informations générales</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <strong>Nom d'utilisateur :</strong> {{ user.username }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Rôle :</strong> 
+                                <span class="badge bg-info">{{ user.get_role_display }}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Email :</strong> 
+                                {{ user.email|default:"Non renseigné" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Compte actif :</strong>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Informations complémentaires</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <strong>Créé par :</strong> 
+                                {% if user.created_by %}
+                                    {{ user.created_by.username }}
+                                {% else %}
+                                    <span class="text-muted">Non renseigné</span>
+                                {% endif %}
+                            </li>
+                            {% if user.role == 'CREW' %}
+                            <li class="list-group-item">
+                                <strong>Date début contrat :</strong> 
+                                {{ user.date_start_contract|date:"d/m/Y"|default:"Non renseignée" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Date fin contrat :</strong> 
+                                {{ user.date_end_contract|date:"d/m/Y"|default:"Non renseignée" }}
+                            </li>
+                            {% endif %}
+                            <li class="list-group-item">
+                                <strong>Date d'inscription :</strong> 
+                                {{ user.date_joined|date:"d/m/Y à H:i" }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" 
+                        data-bs-dismiss="modal">Fermer</button>
+                {% if user.role != 'ADMIN' or request.user|has_group:"Admin" %}
+                    {% if user.id != request.user.id %}
+                        <a href="{% url 'change_user' user_id=user.id %}" 
+                           class="btn btn-primary">Modifier</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+{% load static %}
+
+<!-- Modale de confirmation de déconnexion -->
+<div class="modal fade" id="logoutModal" tabindex="-1" 
+     aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="logoutModalLabel">Confirmation de déconnexion</h5>
+                <button type="button" class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" 
+                        data-bs-dismiss="modal">Annuler</button>
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Se déconnecter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

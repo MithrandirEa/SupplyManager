@@ -1,0 +1,106 @@
+{% load static %}
+{% load auth_extras %}
+
+<!-- Modale de détails pour un item -->
+<div class="modal fade" id="itemDetailModal{{ item.id }}" tabindex="-1" 
+     aria-labelledby="itemDetailModalLabel{{ item.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="itemDetailModalLabel{{ item.id }}">
+                    Détails de l'item
+                </h5>
+                <button type="button" class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Informations générales</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <strong>Nom :</strong> {{ item.name }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Catégorie :</strong> 
+                                <span class="badge bg-info">{{ item.category.name }}</span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Informations :</strong> 
+                                {{ item.information|default:"Aucune information" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Créé par :</strong> 
+                                {% if item.created_by %}
+                                    {{ item.created_by.username }}
+                                {% else %}
+                                    <span class="text-muted">Non renseigné</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Quantités</h6>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>Quantité totale :</strong>
+                                <span class="badge bg-primary rounded-pill">{{ item.total_quantity }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>Quantité hors site :</strong>
+                                <span class="badge bg-warning rounded-pill">{{ item.outside_quantity }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>Quantité disponible :</strong>
+                                <span class="badge bg-success rounded-pill">{{ item.available_quantity }}</span>
+                            </li>
+                        </ul>
+                        
+                        <h6 class="text-muted">Fournisseurs</h6>
+                        {% if item.suppliers.all %}
+                            <ul class="list-group">
+                                {% for supplier in item.suppliers.all %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ supplier.name }}
+                                        {% if supplier.contact_email %}
+                                            <a href="mailto:{{ supplier.contact_email }}" 
+                                               class="badge bg-secondary text-decoration-none">
+                                                <i class="bi bi-envelope"></i> Email
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">Aucun fournisseur associé</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-muted">Dates</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Créé le :</strong> 
+                                {{ item.created_at|date:"d/m/Y à H:i" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Dernière modification :</strong> 
+                                {{ item.updated_at|date:"d/m/Y à H:i" }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" 
+                        data-bs-dismiss="modal">Fermer</button>
+                {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+                    <a href="{% url 'change_item' item_id=item.id %}" 
+                       class="btn btn-primary">Modifier</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

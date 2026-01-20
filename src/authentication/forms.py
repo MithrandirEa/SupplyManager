@@ -45,6 +45,14 @@ class CustomUserCreationForm(UserCreationForm):
             'username', 'email', 'role',
             'date_start_contract', 'date_end_contract', 'still_active'
         )
+        labels = {
+            'username': 'Nom & Prénom',
+            'email': 'Email',
+            'role': 'Rôle',
+            'date_start_contract': 'Date de début de contrat',
+            'date_end_contract': 'Date de fin de contrat',
+            'still_active': 'Compte actif',
+        }
         widgets = {
             'date_start_contract': forms.DateInput(attrs={'type': 'date'}),
             'date_end_contract': forms.DateInput(attrs={'type': 'date'}),
@@ -82,7 +90,7 @@ class CustomUserChangeForm(UserChangeForm):
             'date_start_contract', 'date_end_contract', 'still_active'
         )
         labels = {
-            'username': 'Nom d\'utilisateur',
+            'username': 'Nom & Prénom',
             'email': 'Email',
             'role': 'Rôle',
             'date_start_contract': 'Date de début de contrat',
