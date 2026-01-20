@@ -15,8 +15,6 @@
         }
         main {
             flex: 1;
-            display: flex;
-            align-items: center;
         }
         footer {
             margin-top: auto;
@@ -43,11 +41,17 @@
                     <div class="navbar-nav fs-4 gap-3 text-end text-lg-start">
                         <a class="nav-link" {% if request.resolver_match.url_name == 'home' %}active fw-bold{% endif %} href="{% url 'home' %}">Accueil</a>
                         <a class="nav-link" {% if request.resolver_match.url_name == 'create_user' %}active fw-bold{% endif %} href="{% url 'create_user' %}">Créer un compte</a>
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'change_user' %}active fw-bold{% endif %} href="{% url 'change_user' user_id={{user.id}} %}">Modifier un compte</a>
+                        <a class="nav-link" {% if request.resolver_match.url_name == 'change_user' %}active fw-bold{% endif %} href="{% url 'change_user' user_id=user.id %}">Modifier un compte</a>
                     </div>
         </div>
     </nav>      
     {% endif %}
+    
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    
     <footer>
         <p>&copy; 2026 LaundryWatcher - Created by SCIPION Clément</p>
     </footer>

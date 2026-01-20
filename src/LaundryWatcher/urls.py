@@ -22,6 +22,8 @@ from django.urls import path
 
 import authentication.views
 import core.views
+import supply.views
+import supplier.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -43,5 +45,15 @@ urlpatterns = [
     path('create-user/', authentication.views.create_user, name='create_user'),
     path('change-user/<int:user_id>/', authentication.views.change_user, name='change_user'),
     path('delete-user/<int:user_id>/', authentication.views.delete_user, name='delete_user'),
+
+    # Routes de gestion des items
+    path('create-item/', supply.views.create_item, name='create_item'),
+    path('change-item/<int:item_id>/', supply.views.change_item, name='change_item'),
+    path('delete-item/<int:item_id>/', supply.views.delete_item, name='delete_item'),
+
+    # Routes de gestion des fournisseurs
+    path('create-supplier/', supplier.views.create_supplier, name='create_supplier'),
+    path('change-supplier/<int:supplier_id>/', supplier.views.change_supplier, name='change_supplier'),
+    path('delete-supplier/<int:supplier_id>/', supplier.views.delete_supplier, name='delete_supplier'),
 
 ]

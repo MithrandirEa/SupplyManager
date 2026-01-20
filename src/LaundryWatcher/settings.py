@@ -37,7 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
+    'crispy_bootstrap5',
     'authentication',
+    'core',
+    'supply',
+    'supplier',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +64,8 @@ TEMPLATES = [
             BASE_DIR / 'LaundryWatcher' / 'templates',
             BASE_DIR / 'authentication' / 'templates',
             BASE_DIR / 'core' / 'templates',
+            BASE_DIR / 'supply' / 'templates',
+            BASE_DIR / 'supplier' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
