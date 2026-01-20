@@ -9,9 +9,7 @@ def create_supplier(request):
     if request.method == 'POST':
         form = CreateSupplierForm(request.POST)
         if form.is_valid():
-            new_supplier = form.save(commit=False)
-            new_supplier.save()
-            form.save_m2m()  # Sauvegarde les relations ManyToMany
+            supplier = form.save()
             return redirect('suppliers_management')
     else:
         form = CreateSupplierForm()

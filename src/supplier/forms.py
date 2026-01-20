@@ -12,7 +12,7 @@ class CreateSupplierForm(forms.ModelForm):
             'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'other_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'associated_items': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'associated_items': forms.CheckboxSelectMultiple(),
         }
 
 
@@ -26,6 +26,5 @@ class ChangeSupplierForm(forms.ModelForm):
             'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'other_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'associated_items': forms.SelectMultiple(attrs={'class': 'form-select'}),
-
+            'associated_items': forms.CheckboxSelectMultiple(),
         }
