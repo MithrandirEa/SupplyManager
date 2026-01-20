@@ -35,6 +35,7 @@ class Item(models.Model):
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    stock_entry_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name

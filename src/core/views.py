@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from authentication.models import User
 from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, F
 
 from supplier.models import Supplier
 from supply.models import Item, ItemsCategory
@@ -33,7 +33,7 @@ def home(request):
 
     # Items avec delta négatif (outside > total)
     items_with_issues = Item.objects.filter(
-        outside_quantity__gt=models.F('total_quantity')
+        outside_quantity__gt=F('total_quantity')
     )
 
     # Statistiques par catégorie

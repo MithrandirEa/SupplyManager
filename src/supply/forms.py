@@ -66,3 +66,23 @@ class ChangeItemForm(forms.ModelForm):
                 attrs={'class': 'form-control'}
             ),
         }
+
+
+class BuyItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = ['total_quantity', 'suppliers', 'stock_entry_date']
+        labels = {
+            'total_quantity': 'Quantité achetée (à ajouter au stock)',
+            'suppliers': 'Fournisseur',
+            'stock_entry_date': "Date d'entrée en stock",
+        }
+        widgets = {
+            'total_quantity': forms.NumberInput(
+                attrs={'class': 'form-control', 'min': 1}
+            ),
+            'suppliers': forms.Select(attrs={'class': 'form-select'}),
+            'stock_entry_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+        }
