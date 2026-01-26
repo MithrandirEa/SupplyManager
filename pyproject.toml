@@ -1,0 +1,24 @@
+[project]
+name = "laundrywatcher"
+version = "0.1.1"
+description = "Logiciel de gestion du linge en hotelerie."
+authors = [
+    {name = "Clement SCIPION (clscipion@gmail.com)"}
+]
+license = {text = "To define"}
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "django (>=6.0.1,<7.0.0)",
+    "django-crispy-forms (>=2.5,<3.0)",
+    "pillow (>=12.1.0,<13.0.0)",
+    "crispy-bootstrap5 (>=2025.6,<2026.0)",
+    "asgiref (>=3.11.0,<4.0.0)",
+    "sqlparse (>=0.5.5,<0.6.0)",
+    "tzdata (>=2025.3,<2026.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
