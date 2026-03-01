@@ -568,7 +568,7 @@
     
     <!-- Modal : Créer une commande -->
     <div class="modal fade" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="createOrderModalLabel">
@@ -578,20 +578,72 @@
                 </div>
                 <form id="createOrderForm">
                     {% csrf_token %}
+                    <input type="hidden" id="orderItems" name="items" value="[]">
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="orderSupplier" class="form-label">Fournisseur</label>
-                            <select class="form-select" id="orderSupplier" name="supplier" required>
-                                <option value="">Sélectionner un fournisseur</option>
-                                {% for supplier in all_suppliers %}
-                                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="orderSupplier" class="form-label">Fournisseur</label>
+                                <select class="form-select" id="orderSupplier" name="supplier" required>
+                                    <option value="">Sélectionner un fournisseur</option>
+                                    {% for supplier in all_suppliers %}
+                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="orderExpectedDate" class="form-label">Date de retour attendue</label>
+                                <input type="date" class="form-control" id="orderExpectedDate" name="expected_return_date" required>
+                            </div>
                         </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">Articles à commander</h6>
+                        
+                        <!-- Sélection d'articles -->
                         <div class="mb-3">
-                            <label for="orderExpectedDate" class="form-label">Date de retour attendue</label>
-                            <input type="date" class="form-control" id="orderExpectedDate" name="expected_return_date" required>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="itemSelect" class="form-label">Article</label>
+                                    <select class="form-select" id="itemSelect">
+                                        <option value="">Sélectionner un article</option>
+                                        {% for item in all_items %}
+                                        <option value="{{ item.id }}" data-name="{{ item.name }}">
+                                            {{ item.name }} - {{ item.category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="itemQuantity" class="form-label">Quantité</label>
+                                    <input type="number" class="form-control" id="itemQuantity" min="1" value="1">
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-success w-100" id="btnAddItem">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Liste des articles ajoutés -->
+                        <div id="orderItemsList" class="mb-3">
+                            <div class="alert alert-info" id="noItemsMessage">
+                                <i class="bi bi-info-circle"></i> Aucun article ajouté
+                            </div>
+                            <table class="table table-sm d-none" id="itemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Article</th>
+                                        <th>Quantité</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        
                         <div id="orderFormErrors" class="alert alert-danger d-none"></div>
                     </div>
                     <div class="modal-footer">

@@ -74,6 +74,11 @@ def dashboard(request):
 
     # Récupération des fournisseurs pour le formulaire de commande
     all_suppliers = Supplier.objects.all().order_by('name')
+    
+    # Récupération des items pour le formulaire de commande
+    all_items = Item.objects.filter(
+        is_available=True
+    ).order_by('category__name', 'name')
 
     # Préparation du contexte
     context = {
@@ -99,6 +104,7 @@ def dashboard(request):
         
         # Pour les actions rapides
         'all_suppliers': all_suppliers,
+        'all_items': all_items,
     }
 
     return render(request, 'dashboard.html', context)

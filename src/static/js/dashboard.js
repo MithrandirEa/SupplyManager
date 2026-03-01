@@ -469,6 +469,105 @@
         expectedDateInput.value = today.toISOString().split('T')[0];
         expectedDateInput.min = new Date().toISOString().split('T')[0];
 
+        // Gérer l'ajout d'items
+        const btnAddItem = document.getElementById('btnAddItem');
+        const itemSelect = document.getElementById('itemSelect');
+        const itemQuantity = document.getElementById('itemQuantity');
+        
+        let orderItems = [];
+        
+        if (btnAddItem) {
+            btnAddItem.addEventListener('click', () => {
+                const itemId = itemSelect.value;
+                const itemName = itemSelect.options[itemSelect.selectedIndex]?.dataset.name;
+                const quantity = parseInt(itemQuantity.value);
+                
+                if (!itemId || !quantity || quantity <= 0) {
+                    showNotification('Veuillez sélectionner un article et une quantité valide', 'warning');
+                    return;
+                }
+                
+                // Vérifier si l'item existe déjà
+                const existingIndex = orderItems.findIndex(item => item.item_id === itemId);
+                if (existingIndex >= 0) {
+                    // Mettre à jour la quantité
+                    orderItems[existingIndex].quantity = quantity;
+                } else {
+                    // Ajouter le nouvel item
+                    orderItems.push({
+                        item_id: itemId,
+                        item_name: itemName,
+                        quantity: quantity
+                    });
+                }
+                
+                updateOrderItemsDisplay(orderItems);
+                
+                // Réinitialiser la sélection
+                itemSelect.value = '';
+                itemQuantity.value = 1;
+            });
+        }
+        
+        function updateOrderItemsDisplay(items) {
+            const noItemsMsg = document.getElementById('noItemsMessage');
+            const itemsTable = document.getElementById('itemsTable');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+            const orderItemsInput = document.getElementById('orderItems');
+            
+            if (items.length === 0) {
+                noItemsMsg.classList.remove('d-none');
+                itemsTable.classList.add('d-none');
+                orderItemsInput.value = '[]';
+                return;
+            }
+            
+            noItemsMsg.classList.add('d-none');
+            itemsTable.classList.remove('d-none');
+            
+            // Mettre à jour le tableau
+            itemsTableBody.innerHTML = '';
+            items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.item_name}</td>
+                    <td>${item.quantity}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="window.removeOrderItem(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                itemsTableBody.appendChild(row);
+            });
+            
+            // Mettre à jour le champ caché avec les données JSON
+            orderItemsInput.value = JSON.stringify(items);
+        }
+        
+        // Fonction globale pour supprimer un item
+        window.removeOrderItem = (index) => {
+            orderItems.splice(index, 1);
+            updateOrderItemsDisplay(orderItems);
+        };
+        
+        // Réinitialiser les items quand le modal est fermé
+        const modal = document.getElementById('createOrderModal');
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', () => {
+                orderItems = [];
+                updateOrderItemsDisplay(orderItems);
+                form.reset();
+                const errorDiv = document.getElementById('orderFormErrors');
+                if (errorDiv) errorDiv.classList.add('d-none');
+                
+                // Réinitialiser la date par défaut
+                const today = new Date();
+                today.setDate(today.getDate() + 7);
+                expectedDateInput.value = today.toISOString().split('T')[0];
+            });
+        }
+
         form.addEventListener('submit', handleOrderSubmit);
     }
 

@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from supply.models import Item, ItemsCategory
 from supplier.models import Supplier, Order, OrderItem
@@ -77,7 +78,7 @@ class DashboardServiceTestCase(TestCase):
         # Créer des commandes
         self.order_delayed = Order.objects.create(
             supplier=self.supplier,
-            order_date=date.today() - timedelta(days=15),
+            order_date=timezone.now() - timedelta(days=15),
             expected_return_date=date.today() - timedelta(days=10),
             status='delayed',
             created_by=self.admin
@@ -85,7 +86,7 @@ class DashboardServiceTestCase(TestCase):
 
         self.order_waited = Order.objects.create(
             supplier=self.supplier,
-            order_date=date.today() - timedelta(days=2),
+            order_date=timezone.now() - timedelta(days=2),
             expected_return_date=date.today() + timedelta(days=5),
             status='pending',
             created_by=self.admin
