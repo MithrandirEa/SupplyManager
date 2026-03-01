@@ -60,6 +60,19 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ajouter les classes Bootstrap aux champs
+        for field_name, field in self.fields.items():
+            if field_name == 'still_active':
+                field.widget.attrs['class'] = 'form-check-input'
+            elif isinstance(field.widget, forms.DateInput):
+                field.widget.attrs['class'] = 'form-control'
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs['class'] = 'form-select'
+            else:
+                field.widget.attrs['class'] = 'form-control'
+    
     def clean(self):
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
@@ -82,6 +95,23 @@ class CustomUserChangeForm(UserChangeForm):
                 )
 
         return cleaned_data
+
+    def save(self, commit=True):
+        from datetime import date
+        
+        user = super().save(commit=False)
+        
+        # Logique de réactivation automatique si le contrat est prolongé
+        if user.role == User.CREW and user.date_end_contract:
+            # Si la date de fin de contrat est dans le futur,
+            # réactiver automatiquement le compte
+            if user.date_end_contract >= date.today():
+                user.still_active = True
+        
+        if commit:
+            user.save()
+        
+        return user
 
     class Meta:
         model = User

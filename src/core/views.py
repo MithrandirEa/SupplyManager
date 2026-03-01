@@ -2,10 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from authentication.models import User
 from django.contrib.auth.decorators import login_required, permission_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 from supplier.models import Supplier
 from supply.models import Item
 from .services import DashboardService
+from .forms import InventoryUpdateForm, ContractExtensionForm
+from supplier.forms import QuickOrderForm
 
 
 @login_required
@@ -68,6 +72,9 @@ def dashboard(request):
     # Récupération du nombre d'alertes pour l'affichage
     alerts_count = DashboardService.get_alerts_count()
 
+    # Récupération des fournisseurs pour le formulaire de commande
+    all_suppliers = Supplier.objects.all().order_by('name')
+
     # Préparation du contexte
     context = {
         # Stocks
@@ -89,6 +96,102 @@ def dashboard(request):
 
         # Informations additionnelles
         'total_alerts': alerts_count['total'],
+        
+        # Pour les actions rapides
+        'all_suppliers': all_suppliers,
     }
 
     return render(request, 'dashboard.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_order_ajax(request):
+    """
+    Vue AJAX pour créer une commande rapide depuis le dashboard
+    """
+    # Vérification des permissions
+    if not _user_can_access_dashboard(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission refusée.'
+        }, status=403)
+
+    form = QuickOrderForm(request.POST, user=request.user)
+    
+    if form.is_valid():
+        order = form.save()
+        return JsonResponse({
+            'success': True,
+            'message': f'Commande #{order.id} créée avec succès.',
+            'order_id': order.id
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_inventory_ajax(request):
+    """
+    Vue AJAX pour enregistrer un inventaire
+    """
+    # Vérification des permissions
+    if not _user_can_access_dashboard(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission refusée.'
+        }, status=403)
+
+    form = InventoryUpdateForm(request.POST)
+    
+    if form.is_valid():
+        item = form.save()
+        return JsonResponse({
+            'success': True,
+            'message': f'Inventaire de "{item.name}" enregistré.',
+            'item_name': item.name,
+            'new_quantity': item.last_inventory_quantity
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        }, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def extend_contract_ajax(request):
+    """
+    Vue AJAX pour prolonger un contrat
+    """
+    # Vérification des permissions
+    if not _user_can_access_dashboard(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission refusée.'
+        }, status=403)
+
+    form = ContractExtensionForm(request.POST)
+    
+    if form.is_valid():
+        user = form.save()
+        end_date = user.date_end_contract.strftime("%d/%m/%Y")
+        return JsonResponse({
+            'success': True,
+            'message': (
+                f'Contrat de {user.username} '
+                f'prolongé jusqu\'au {end_date}.'
+            ),
+            'username': user.username,
+            'new_date': user.date_end_contract.isoformat()
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        }, status=400)

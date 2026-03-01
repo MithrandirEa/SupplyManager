@@ -369,6 +369,245 @@
         });
     }
 
+    // ==================== ACTIONS RAPIDES (MODALS) ====================
+    
+    /**
+     * Initialise les modals et leurs formulaires
+     */
+    function initModals() {
+        initInventoryModal();
+        initContractModal();
+        initOrderModal();
+    }
+
+    /**
+     * Initialise le modal d'inventaire
+     */
+    function initInventoryModal() {
+        // Ajouter un bouton "Enregistrer inventaire" sur chaque ligne d'article
+        document.querySelectorAll('[data-item-id]').forEach(row => {
+            const itemId = row.dataset.itemId;
+            const itemName = row.dataset.itemName;
+            
+            // Créer un bouton d'action si pas déjà présent
+            if (!row.querySelector('.btn-inventory')) {
+                const actionCell = row.querySelector('.action-cell');
+                if (actionCell) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-sm btn-info btn-inventory';
+                    btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+                    btn.title = 'Enregistrer inventaire';
+                    btn.onclick = () => openInventoryModal(itemId, itemName);
+                    actionCell.appendChild(btn);
+                }
+            }
+        });
+    }
+
+    /**
+     * Ouvre le modal d'inventaire
+     */
+    function openInventoryModal(itemId, itemName) {
+        document.getElementById('inventoryItemId').value = itemId;
+        document.getElementById('inventoryItemName').textContent = itemName;
+        document.getElementById('inventoryQuantity').value = '';
+        document.getElementById('inventoryFormErrors').classList.add('d-none');
+        
+        const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+        modal.show();
+    }
+
+    /**
+     * Initialise le modal de prolongation de contrat
+     */
+    function initContractModal() {
+        // Ajouter des boutons sur les alertes de contrat
+        document.querySelectorAll('[data-user-id]').forEach(row => {
+            const userId = row.dataset.userId;
+            const username = row.dataset.username;
+            const currentDate = row.dataset.endDate;
+            
+            if (!row.querySelector('.btn-contract')) {
+                const actionCell = row.querySelector('.action-cell');
+                if (actionCell) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-sm btn-warning btn-contract';
+                    btn.innerHTML = '<i class="bi bi-calendar-plus"></i>';
+                    btn.title = 'Prolonger contrat';
+                    btn.onclick = () => openContractModal(userId, username, currentDate);
+                    actionCell.appendChild(btn);
+                }
+            }
+        });
+    }
+
+    /**
+     * Ouvre le modal de prolongation de contrat
+     */
+    function openContractModal(userId, username, currentDate) {
+        document.getElementById('contractUserId').value = userId;
+        document.getElementById('contractUsername').textContent = username;
+        document.getElementById('contractCurrentDate').textContent = currentDate;
+        document.getElementById('contractNewDate').value = '';
+        document.getElementById('contractFormErrors').classList.add('d-none');
+        
+        const modal = new bootstrap.Modal(document.getElementById('contractModal'));
+        modal.show();
+    }
+
+    /**
+     * Initialise le formulaire de création de commande
+     */
+    function initOrderModal() {
+        const form = document.getElementById('createOrderForm');
+        if (!form) return;
+
+        // Définir la date par défaut (7 jours)
+        const expectedDateInput = document.getElementById('orderExpectedDate');
+        const today = new Date();
+        today.setDate(today.getDate() + 7);
+        expectedDateInput.value = today.toISOString().split('T')[0];
+        expectedDateInput.min = new Date().toISOString().split('T')[0];
+
+        form.addEventListener('submit', handleOrderSubmit);
+    }
+
+    /**
+     * Gère la soumission du formulaire de commande
+     */
+    async function handleOrderSubmit(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const errorDiv = document.getElementById('orderFormErrors');
+        
+        try {
+            const response = await fetch('/dashboard/create-order/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(data.message, 'success');
+                bootstrap.Modal.getInstance(document.getElementById('createOrderModal')).hide();
+                form.reset();
+                errorDiv.classList.add('d-none');
+                
+                // Rafraîchir la page après 1 seconde
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                errorDiv.textContent = formatErrors(data.errors);
+                errorDiv.classList.remove('d-none');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors de la création de la commande', 'danger');
+        }
+    }
+
+    /**
+     * Initialise les formulaires d'inventaire et de contrat
+     */
+    function initActionForms() {
+        // Formulaire d'inventaire
+        const inventoryForm = document.getElementById('inventoryForm');
+        if (inventoryForm) {
+            inventoryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const errorDiv = document.getElementById('inventoryFormErrors');
+                
+                try {
+                    const response = await fetch('/dashboard/update-inventory/', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
+                        errorDiv.classList.add('d-none');
+                        
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        errorDiv.textContent = formatErrors(data.errors);
+                        errorDiv.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    showNotification('Erreur lors de l\'enregistrement', 'danger');
+                }
+            });
+        }
+
+        // Formulaire de prolongation de contrat
+        const contractForm = document.getElementById('contractForm');
+        if (contractForm) {
+            contractForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const errorDiv = document.getElementById('contractFormErrors');
+                
+                try {
+                    const response = await fetch('/dashboard/extend-contract/', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('contractModal')).hide();
+                        errorDiv.classList.add('d-none');
+                        
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        errorDiv.textContent = formatErrors(data.errors);
+                        errorDiv.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    showNotification('Erreur lors de la prolongation', 'danger');
+                }
+            });
+        }
+    }
+
+    /**
+     * Formate les erreurs de formulaire pour l'affichage
+     */
+    function formatErrors(errors) {
+        if (typeof errors === 'string') return errors;
+        
+        const errorList = [];
+        for (const [field, messages] of Object.entries(errors)) {
+            if (Array.isArray(messages)) {
+                errorList.push(...messages);
+            } else {
+                errorList.push(messages);
+            }
+        }
+        
+        return errorList.join('. ');
+    }
+
     // ==================== INITIALISATION ====================
     
     /**
@@ -392,6 +631,10 @@
         // Initialiser les compteurs animés
         initAnimatedCounters();
         
+        // Initialiser les modals et formulaires d'actions rapides
+        initModals();
+        initActionForms();
+        
         // Démarrer le rafraîchissement auto (si activé)
         startAutoRefresh();
         
@@ -401,7 +644,9 @@
             printDashboard,
             copyToClipboard,
             showNotification,
-            refreshDashboard
+            refreshDashboard,
+            openInventoryModal,
+            openContractModal
         };
     }
 

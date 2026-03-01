@@ -56,7 +56,7 @@ class Command(BaseCommand):
             return
 
         # Désactiver les comptes
-        expired_users.update(is_active=False)
+        expired_users.update(is_active=False, still_active=False)
 
         self.stdout.write(
             self.style.SUCCESS(

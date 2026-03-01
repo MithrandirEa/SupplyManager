@@ -78,7 +78,7 @@ class DashboardServiceTestCase(TestCase):
         self.order_delayed = Order.objects.create(
             supplier=self.supplier,
             order_date=date.today() - timedelta(days=15),
-            expected_return_date=date.today() - timedelta(days=5),
+            expected_return_date=date.today() - timedelta(days=10),
             status='delayed',
             created_by=self.admin
         )
@@ -230,7 +230,7 @@ class DashboardViewTestCase(TestCase):
         """Test de redirection si non connecté"""
         response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 302)
-        self.assertIn('/login', response.url)
+        self.assertIn('?next=/dashboard/', response.url)
 
     def test_dashboard_access_denied_for_crew(self):
         """Test de refus d'accès pour Crew"""

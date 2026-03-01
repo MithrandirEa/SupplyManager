@@ -89,6 +89,10 @@ class User(AbstractUser):
         created_by_user = kwargs.pop('created_by_user', None)
         if created_by_user and not self.pk and not self.created_by:
             self.created_by = created_by_user
+        
+        # Synchroniser is_active avec still_active
+        self.is_active = self.still_active
+        
         super().save(*args, **kwargs)
 
         # Ajout automatique au groupe selon le rôle

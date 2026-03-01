@@ -64,7 +64,17 @@ def change_user(request, user_id):
         form = CustomUserChangeForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                f"L'utilisateur {user.username} a été modifié avec succès."
+            )
             return redirect('staff_management')
+        else:
+            messages.error(
+                request,
+                "Erreur lors de la modification. "
+                "Veuillez vérifier les champs du formulaire."
+            )
     else:
         form = CustomUserChangeForm(instance=user)
 

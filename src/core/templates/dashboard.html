@@ -36,6 +36,33 @@
         </div>
     </div>
 
+    <!-- Actions Rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-lightning-charge"></i> Actions rapides
+                    </h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrderModal">
+                            <i class="bi bi-plus-circle"></i> Créer une commande
+                        </button>
+                        <button type="button" class="btn btn-info text-white" id="btnOpenInventory" disabled>
+                            <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
+                        </button>
+                        <button type="button" class="btn btn-warning" id="btnOpenContract" disabled>
+                            <i class="bi bi-calendar-plus"></i> Prolonger un contrat
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Sélectionnez un article ou un employé dans les tableaux ci-dessous pour activer les actions correspondantes.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Accordion Dashboard -->
     <div class="accordion" id="dashboardAccordion">
         
@@ -536,6 +563,124 @@
         </div>
 
     </div>
+
+    <!-- Modals pour actions rapides -->
+    
+    <!-- Modal : Créer une commande -->
+    <div class="modal fade" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createOrderModalLabel">
+                        <i class="bi bi-plus-circle"></i> Créer une commande
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createOrderForm">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="orderSupplier" class="form-label">Fournisseur</label>
+                            <select class="form-select" id="orderSupplier" name="supplier" required>
+                                <option value="">Sélectionner un fournisseur</option>
+                                {% for supplier in all_suppliers %}
+                                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="orderExpectedDate" class="form-label">Date de retour attendue</label>
+                            <input type="date" class="form-control" id="orderExpectedDate" name="expected_return_date" required>
+                        </div>
+                        <div id="orderFormErrors" class="alert alert-danger d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Créer la commande
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal : Enregistrer un inventaire -->
+    <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inventoryModalLabel">
+                        <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="inventoryForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="inventoryItemId" name="item_id">
+                    <div class="modal-body">
+                        <p class="mb-3">
+                            <strong>Article :</strong> <span id="inventoryItemName"></span>
+                        </p>
+                        <div class="mb-3">
+                            <label for="inventoryQuantity" class="form-label">Quantité constatée</label>
+                            <input type="number" class="form-control" id="inventoryQuantity" 
+                                   name="last_inventory_quantity" min="0" required>
+                            <div class="form-text">
+                                Entrez la quantité réellement comptée lors de l'inventaire
+                            </div>
+                        </div>
+                        <div id="inventoryFormErrors" class="alert alert-danger d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal : Prolonger un contrat -->
+    <div class="modal fade" id="contractModal" tabindex="-1" aria-labelledby="contractModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contractModalLabel">
+                        <i class="bi bi-calendar-plus"></i> Prolonger un contrat
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="contractForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="contractUserId" name="user_id">
+                    <div class="modal-body">
+                        <p class="mb-3">
+                            <strong>Employé :</strong> <span id="contractUsername"></span>
+                        </p>
+                        <p class="mb-3">
+                            <strong>Date actuelle de fin :</strong> <span id="contractCurrentDate"></span>
+                        </p>
+                        <div class="mb-3">
+                            <label for="contractNewDate" class="form-label">Nouvelle date de fin</label>
+                            <input type="date" class="form-control" id="contractNewDate" 
+                                   name="new_end_date" required>
+                        </div>
+                        <div id="contractFormErrors" class="alert alert-danger d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Prolonger
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 

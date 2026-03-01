@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
+from django.urls import path, include
 
 import authentication.views
 import core.views
@@ -28,6 +28,23 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', core.views.home, name='home'),
     path('dashboard/', core.views.dashboard, name='dashboard'),
+    
+    # Actions rapides AJAX du dashboard
+    path(
+        'dashboard/create-order/',
+        core.views.create_order_ajax,
+        name='create_order_ajax'
+    ),
+    path(
+        'dashboard/update-inventory/',
+        core.views.update_inventory_ajax,
+        name='update_inventory_ajax'
+    ),
+    path(
+        'dashboard/extend-contract/',
+        core.views.extend_contract_ajax,
+        name='extend_contract_ajax'
+    ),
 
     # Routes de connexion/déconnexion
     path('', LoginView.as_view(
