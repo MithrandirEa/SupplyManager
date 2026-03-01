@@ -5,12 +5,48 @@ from .models import Item, ItemsCategory
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'category', 'total_quantity', 'outside_quantity',
-        'available_quantity', 'information', 'created_by', 'created_at'
+        'name', 'category', 'total_quantity', 'available_quantity',
+        'outside_quantity', 'excess_quantity', 'missing_quantity',
+        'created_by', 'created_at'
     )
-    list_filter = ('category', 'created_at')
-    search_fields = ('name', 'category')
-    readonly_fields = ('created_at', 'updated_at')
+    list_filter = ('category', 'created_at', 'is_available')
+    search_fields = ('name', 'category__name', 'information')
+    readonly_fields = (
+        'created_at', 'updated_at', 'missing_quantity', 'actual_loss_quantity'
+    )
+    fieldsets = (
+        ('Informations de base', {
+            'fields': (
+                'name', 'category', 'suppliers',
+                'information', 'created_by'
+            )
+        }),
+        ('Quantités', {
+            'fields': (
+                'total_quantity', 'available_quantity', 'outside_quantity',
+                'excess_quantity', 'missing_quantity'
+            )
+        }),
+        ('Inventaire', {
+            'fields': (
+                'last_inventory_quantity', 'last_inventory_date',
+                'actual_loss_quantity', 'stock_entry_date'
+            )
+        }),
+        ('Statut', {
+            'fields': ('is_available',)
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    filter_horizontal = ('suppliers',)
+
+    def missing_quantity(self, obj):
+        """Affiche la quantité manquante calculée"""
+        return obj.missing_quantity
+    missing_quantity.short_description = 'Quantité manquante'
 
 
 @admin.register(ItemsCategory)
