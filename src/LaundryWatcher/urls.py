@@ -27,6 +27,7 @@ import supplier.views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', core.views.home, name='home'),
+    path('dashboard/', core.views.dashboard, name='dashboard'),
 
     # Routes de connexion/déconnexion
     path('', LoginView.as_view(

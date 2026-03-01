@@ -12,19 +12,19 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
 
 **Fichier**: `src/supply/models.py`
 
-- [ ] Ajouter les champs nécessaires au modèle `Item` :
+- [x] Ajouter les champs nécessaires au modèle `Item` :
   - `last_inventory_quantity` (IntegerField) : quantité du dernier inventaire
   - `last_inventory_date` (DateTimeField) : date du dernier inventaire
   - `excess_quantity` (IntegerField, calculé) : quantité excédentaire
   - `loss_quantity` (IntegerField, calculé) : quantité perdue
 
-- [ ] Ajouter des propriétés calculées (@property) :
+- [x] Ajouter des propriétés calculées (@property) :
   - `missing_quantity` : total_quantity - (available_quantity + outside_quantity)
   - `actual_loss_quantity` : total_quantity - last_inventory_quantity
 
 **Fichier**: `src/supplier/models.py`
 
-- [ ] Créer un nouveau modèle `Order` (Commande) :
+- [x] Créer un nouveau modèle `Order` (Commande) :
   - `supplier` (ForeignKey vers Supplier)
   - `items` (ManyToManyField vers Item avec through pour quantités)
   - `order_date` (DateTimeField) : date de commande
@@ -33,14 +33,14 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
   - `status` (CharField) : choices=['pending', 'delayed', 'completed']
   - `created_by` (ForeignKey vers User)
 
-- [ ] Créer un modèle `OrderItem` (through model) :
+- [x] Créer un modèle `OrderItem` (through model) :
   - `order` (ForeignKey vers Order)
   - `item` (ForeignKey vers Item)
   - `quantity` (IntegerField)
 
 ### 1.2 Migrations
 
-- [ ] Créer et appliquer les migrations :
+- [x] Créer et appliquer les migrations :
   ```bash
   python manage.py makemigrations
   python manage.py migrate
@@ -68,7 +68,7 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
 
 **Fichier**: `src/core/views.py`
 
-- [ ] Créer une vue `DashboardView` (TemplateView ou Vue basée sur fonction) :
+- [x] Créer une vue `DashboardView` (TemplateView ou Vue basée sur fonction) :
   - Récupérer toutes les données via `DashboardService`
   - Passer les contextes suivants au template :
     - `missing_items` : articles manquants
@@ -80,7 +80,7 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
     - `outdated_orders` : commandes en retard
     - `waited_orders` : commandes attendues
 
-- [ ] Ajouter des permissions (decorators) :
+- [x] Ajouter des permissions (decorators) :
   - `@login_required`
   - Vérifier le rôle (Director et Admin uniquement)
 
