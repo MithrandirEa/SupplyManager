@@ -1,0 +1,303 @@
+{% load static %}
+
+<!-- Formulaire de modification d'une commande -->
+<div class="container mt-4">
+    <h2 class="mb-4">Modifier la commande #{{ order.id }}</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Informations de la commande</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Date de commande :</strong> {{ order.order_date|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Créée par :</strong> {{ order.created_by.get_full_name|default:order.created_by.username }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Statut actuel :</strong> 
+                        {% if order.status == 'pending' %}
+                            <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                        {% elif order.status == 'delayed' %}
+                            <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ order.get_status_display }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Articles de la commande</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">Sélectionnez les articles et leurs quantités ci-dessous :</p>
+            
+            <!-- Zone de sélection des items -->
+            <div class="mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem;">
+                <div class="accordion" id="itemsCategoryAccordion">
+                    {% for category, items in items_by_category.items %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" 
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                                    aria-controls="collapse{{ forloop.counter }}">
+                                <strong>{{ category }}</strong>
+                                <span class="badge bg-secondary ms-2">{{ items|length }}</span>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ forloop.counter }}" 
+                             class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                             aria-labelledby="heading{{ forloop.counter }}" 
+                             data-bs-parent="#itemsCategoryAccordion">
+                            <div class="accordion-body p-0">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 50%;">Article</th>
+                                            <th style="width: 25%;">Quantité</th>
+                                            <th style="width: 25%;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in items %}
+                                        <tr>
+                                            <td>{{ item.name }}</td>
+                                            <td>
+                                                <input type="number" 
+                                                       class="form-control form-control-sm item-quantity" 
+                                                       id="qty_{{ item.id }}" 
+                                                       min="1" 
+                                                       value="1"
+                                                       data-item-id="{{ item.id }}"
+                                                       data-item-name="{{ item.name }}">
+                                            </td>
+                                            <td>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-success btn-add-item" 
+                                                        data-item-id="{{ item.id }}"
+                                                        data-item-name="{{ item.name }}"
+                                                        title="Ajouter cet article">
+                                                    <i class="bi bi-plus"></i> Ajouter
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Liste des articles ajoutés -->
+            <div id="orderItemsList" class="mb-3">
+                <h6 class="mb-2">Articles sélectionnés :</h6>
+                <div class="alert alert-info" id="noItemsMessage">
+                    <i class="bi bi-info-circle"></i> Aucun article ajouté
+                </div>
+                <table class="table table-sm d-none" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Article</th>
+                            <th style="width: 30%;">Quantité</th>
+                            <th style="width: 20%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body p-5">
+            <form method="post" id="changeOrderForm">
+                {% csrf_token %}
+                
+                <!-- Champ caché pour les items -->
+                <input type="hidden" id="orderItems" name="items" value="[]">
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.supplier.id_for_label }}" class="form-label">{{ form.supplier.label }} :</label>
+                    {{ form.supplier }}
+                    {% if form.supplier.errors %}
+                    <div class="text-danger">{{ form.supplier.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.expected_return_date.id_for_label }}" class="form-label">{{ form.expected_return_date.label }} :</label>
+                    {{ form.expected_return_date }}
+                    {% if form.expected_return_date.errors %}
+                    <div class="text-danger">{{ form.expected_return_date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.actual_return_date.id_for_label }}" class="form-label">{{ form.actual_return_date.label }} :</label>
+                    {{ form.actual_return_date }}
+                    <small class="form-text text-muted">Laisser vide si la commande n'est pas encore retournée</small>
+                    {% if form.actual_return_date.errors %}
+                    <div class="text-danger">{{ form.actual_return_date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }} :</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }} :</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger">{{ form.notes.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success flex-grow-1">
+                        <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                    </button>
+                    <a href="{% url 'supplies_management' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    
+    // Initialiser les items depuis les données du serveur
+    let orderItems = {{ current_items_json|safe }};
+    
+    // Mettre à jour l'affichage au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        updateOrderItemsDisplay();
+        
+        // Délégation d'événement pour les boutons d'ajout
+        const accordion = document.getElementById('itemsCategoryAccordion');
+        if (accordion) {
+            accordion.addEventListener('click', function(e) {
+                const addBtn = e.target.closest('.btn-add-item');
+                if (!addBtn) return;
+                
+                const itemId = addBtn.dataset.itemId;
+                const itemName = addBtn.dataset.itemName;
+                const quantityInput = document.getElementById(`qty_${itemId}`);
+                const quantity = parseInt(quantityInput.value);
+                
+                if (!quantity || quantity <= 0) {
+                    alert('La quantité doit être supérieure à 0');
+                    return;
+                }
+                
+                // Vérifier si l'item existe déjà
+                const existingIndex = orderItems.findIndex(item => item.item_id === itemId);
+                if (existingIndex >= 0) {
+                    // Mettre à jour la quantité
+                    orderItems[existingIndex].quantity = quantity;
+                } else {
+                    // Ajouter le nouvel item
+                    orderItems.push({
+                        item_id: itemId,
+                        item_name: itemName,
+                        quantity: quantity
+                    });
+                }
+                
+                updateOrderItemsDisplay();
+                
+                // Réinitialiser la quantité à 1
+                quantityInput.value = 1;
+            });
+        }
+    });
+    
+    function updateOrderItemsDisplay() {
+        const noItemsMsg = document.getElementById('noItemsMessage');
+        const itemsTable = document.getElementById('itemsTable');
+        const itemsTableBody = document.getElementById('itemsTableBody');
+        const orderItemsInput = document.getElementById('orderItems');
+        
+        if (orderItems.length === 0) {
+            noItemsMsg.classList.remove('d-none');
+            itemsTable.classList.add('d-none');
+            orderItemsInput.value = '[]';
+            return;
+        }
+        
+        noItemsMsg.classList.add('d-none');
+        itemsTable.classList.remove('d-none');
+        
+        // Mettre à jour le tableau
+        itemsTableBody.innerHTML = '';
+        orderItems.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.item_name}</td>
+                <td style="width: 30%;">
+                    <input type="number" class="form-control form-control-sm" 
+                           value="${item.quantity}" min="1"
+                           onchange="updateItemQuantity(${index}, this.value)"
+                           style="max-width: 100px;">
+                </td>
+                <td style="width: 20%; text-align: center;">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeOrderItem(${index})" title="Supprimer">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </td>
+            `;
+            itemsTableBody.appendChild(row);
+        });
+        
+        // Mettre à jour le champ caché avec les données JSON
+        orderItemsInput.value = JSON.stringify(orderItems);
+    }
+    
+    // Fonction globale pour supprimer un item
+    window.removeOrderItem = function(index) {
+        orderItems.splice(index, 1);
+        updateOrderItemsDisplay();
+    };
+    
+    // Fonction globale pour mettre à jour la quantité d'un item
+    window.updateItemQuantity = function(index, newQuantity) {
+        const quantity = parseInt(newQuantity);
+        if (quantity > 0) {
+            orderItems[index].quantity = quantity;
+            updateOrderItemsDisplay();
+        }
+    };
+})();
+</script>

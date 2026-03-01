@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from supplier.models import Supplier
 from supply.models import Item
 from .services import DashboardService
-from .forms import InventoryUpdateForm, ContractExtensionForm
+from .forms import BulkInventoryForm, InventoryUpdateForm, ContractExtensionForm
 from supplier.forms import QuickOrderForm
 
 
@@ -26,8 +26,27 @@ def staff_management(request):
 
 @login_required
 def supplies_management(request):
+    from supplier.models import Order
+    from supply.models import Inventory
+
     items = Item.objects.all().order_by('category', 'name')
-    return render(request, 'supplies_management.html', {'items': items})
+    orders = Order.objects.select_related(
+        'supplier', 'created_by'
+    ).prefetch_related('order_items__item').all().order_by('-order_date')
+    inventories = Inventory.objects.select_related(
+        'created_by'
+    ).prefetch_related('entries__item__category').all()
+
+    # Compter les commandes non terminées
+    pending_orders_count = orders.exclude(status='completed').count()
+
+    context = {
+        'items': items,
+        'orders': orders,
+        'inventories': inventories,
+        'pending_orders_count': pending_orders_count,
+    }
+    return render(request, 'supplies_management.html', context)
 
 
 @login_required
@@ -75,10 +94,18 @@ def dashboard(request):
     # Récupération des fournisseurs pour le formulaire de commande
     all_suppliers = Supplier.objects.all().order_by('name')
     
-    # Récupération des items pour le formulaire de commande
+    # Récupération des items groupés par catégorie pour le formulaire
+    from supply.models import ItemsCategory
+    from collections import defaultdict
+    
+    items_by_category = defaultdict(list)
     all_items = Item.objects.filter(
         is_available=True
-    ).order_by('category__name', 'name')
+    ).select_related('category').order_by('category__name', 'name')
+    
+    for item in all_items:
+        category_name = item.category.name if item.category else "Sans catégorie"
+        items_by_category[category_name].append(item)
 
     # Préparation du contexte
     context = {
@@ -104,7 +131,8 @@ def dashboard(request):
         
         # Pour les actions rapides
         'all_suppliers': all_suppliers,
-        'all_items': all_items,
+        'all_items': list(all_items),
+        'items_by_category': dict(items_by_category),
     }
 
     return render(request, 'dashboard.html', context)
@@ -143,7 +171,7 @@ def create_order_ajax(request):
 @require_http_methods(["POST"])
 def update_inventory_ajax(request):
     """
-    Vue AJAX pour enregistrer un inventaire
+    Vue AJAX pour enregistrer un inventaire global (tous les articles).
     """
     # Vérification des permissions
     if not _user_can_access_dashboard(request.user):
@@ -152,15 +180,17 @@ def update_inventory_ajax(request):
             'error': 'Permission refusée.'
         }, status=403)
 
-    form = InventoryUpdateForm(request.POST)
-    
+    form = BulkInventoryForm(request.POST)
+
     if form.is_valid():
-        item = form.save()
+        inventory = form.save(user=request.user)
         return JsonResponse({
             'success': True,
-            'message': f'Inventaire de "{item.name}" enregistré.',
-            'item_name': item.name,
-            'new_quantity': item.last_inventory_quantity
+            'message': (
+                f'Inventaire du {inventory.created_at.strftime("%d/%m/%Y %H:%M")} '
+                f'enregistré ({inventory.entries.count()} articles).'
+            ),
+            'inventory_id': inventory.id,
         })
     else:
         return JsonResponse({

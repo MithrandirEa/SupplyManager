@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Item, ItemsCategory
+from .models import Item, ItemsCategory, Inventory, InventoryEntry
 
 
 @admin.register(Item)
@@ -53,3 +53,21 @@ class ItemAdmin(admin.ModelAdmin):
 class ItemsCategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
+
+
+class InventoryEntryInline(admin.TabularInline):
+    model = InventoryEntry
+    extra = 0
+    readonly_fields = ('item', 'counted_quantity')
+
+
+@admin.register(Inventory)
+class InventoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'created_at', 'created_by', 'entry_count', 'notes')
+    list_filter = ('created_at', 'created_by')
+    readonly_fields = ('created_at',)
+    inlines = [InventoryEntryInline]
+
+    @admin.display(description='Nb articles')
+    def entry_count(self, obj):
+        return obj.entries.count()

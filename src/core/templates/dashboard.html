@@ -48,15 +48,12 @@
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrderModal">
                             <i class="bi bi-plus-circle"></i> Créer une commande
                         </button>
-                        <button type="button" class="btn btn-info text-white" id="btnOpenInventory" disabled>
+                        <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#inventoryModal">
                             <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
-                        </button>
-                        <button type="button" class="btn btn-warning" id="btnOpenContract" disabled>
-                            <i class="bi bi-calendar-plus"></i> Prolonger un contrat
                         </button>
                     </div>
                     <small class="text-muted d-block mt-2">
-                        Sélectionnez un article ou un employé dans les tableaux ci-dessous pour activer les actions correspondantes.
+                        Utilisez les boutons ci-dessus pour créer une commande ou enregistrer un inventaire.
                     </small>
                 </div>
             </div>
@@ -382,12 +379,8 @@
                                 </small>
                                 <div class="mt-2">
                                     <button class="btn btn-sm btn-outline-primary" 
-                                            onclick="alert('Fonctionnalité à venir')">
+                                            onclick="window.dashboardUtils.openContractModal({{ alert.user.id }}, '{{ alert.user.get_full_name|default:alert.user.username }}', '{{ alert.user.date_end_contract|date:"d/m/Y" }}')">
                                         <i class="bi bi-calendar-plus"></i> Prolonger
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" 
-                                            onclick="alert('Fonctionnalité à venir')">
-                                        <i class="bi bi-check"></i> Confirmer fin
                                     </button>
                                 </div>
                             </div>
@@ -600,29 +593,63 @@
                         
                         <h6 class="mb-3">Articles à commander</h6>
                         
-                        <!-- Sélection d'articles -->
-                        <div class="mb-3">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <label for="itemSelect" class="form-label">Article</label>
-                                    <select class="form-select" id="itemSelect">
-                                        <option value="">Sélectionner un article</option>
-                                        {% for item in all_items %}
-                                        <option value="{{ item.id }}" data-name="{{ item.name }}">
-                                            {{ item.name }} - {{ item.category.name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
+                        <!-- Tableau des articles par catégorie -->
+                        <div class="mb-3" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.25rem;">
+                            <div class="accordion" id="itemsCategoryAccordion">
+                                {% for category, items in items_by_category.items %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" 
+                                                aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                                                aria-controls="collapse{{ forloop.counter }}">
+                                            <strong>{{ category }}</strong>
+                                            <span class="badge bg-secondary ms-2">{{ items|length }}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ forloop.counter }}" 
+                                         class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                                         aria-labelledby="heading{{ forloop.counter }}" 
+                                         data-bs-parent="#itemsCategoryAccordion">
+                                        <div class="accordion-body p-0">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 50%;">Article</th>
+                                                        <th style="width: 25%;">Quantité</th>
+                                                        <th style="width: 25%;">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in items %}
+                                                    <tr>
+                                                        <td>{{ item.name }}</td>
+                                                        <td>
+                                                            <input type="number" 
+                                                                   class="form-control form-control-sm item-quantity" 
+                                                                   id="qty_{{ item.id }}" 
+                                                                   min="1" 
+                                                                   value="1"
+                                                                   data-item-id="{{ item.id }}"
+                                                                   data-item-name="{{ item.name }}">
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-success btn-add-item" 
+                                                                    data-item-id="{{ item.id }}"
+                                                                    data-item-name="{{ item.name }}"
+                                                                    title="Ajouter cet article">
+                                                                <i class="bi bi-plus"></i> Ajouter
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="itemQuantity" class="form-label">Quantité</label>
-                                    <input type="number" class="form-control" id="itemQuantity" min="1" value="1">
-                                </div>
-                                <div class="col-md-1 d-flex align-items-end">
-                                    <button type="button" class="btn btn-success w-100" id="btnAddItem">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                         
@@ -659,7 +686,7 @@
 
     <!-- Modal : Enregistrer un inventaire -->
     <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="inventoryModalLabel">
@@ -669,25 +696,93 @@
                 </div>
                 <form id="inventoryForm">
                     {% csrf_token %}
-                    <input type="hidden" id="inventoryItemId" name="item_id">
+                    <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
                     <div class="modal-body">
-                        <p class="mb-3">
-                            <strong>Article :</strong> <span id="inventoryItemName"></span>
-                        </p>
-                        <div class="mb-3">
-                            <label for="inventoryQuantity" class="form-label">Quantité constatée</label>
-                            <input type="number" class="form-control" id="inventoryQuantity" 
-                                   name="last_inventory_quantity" min="0" required>
-                            <div class="form-text">
-                                Entrez la quantité réellement comptée lors de l'inventaire
-                            </div>
+                        <div class="alert alert-light border mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            Saisissez la quantité <strong>comptée sur site</strong> pour chaque article.
+                            Le stock disponible sera mis à jour et le total recalculé
+                            en ajoutant automatiquement la quantité chez le fournisseur.
+                            La date de saisie est enregistrée automatiquement.
                         </div>
-                        <div id="inventoryFormErrors" class="alert alert-danger d-none"></div>
+
+                        <!-- Accordion par catégorie -->
+                        <div class="accordion" id="inventoryAccordion">
+                            {% for category_name, cat_items in items_by_category.items %}
+                            {% with forloop.counter as cat_idx %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="invCatHead{{ cat_idx }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#invCatBody{{ cat_idx }}"
+                                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                            aria-controls="invCatBody{{ cat_idx }}">
+                                        <strong>{{ category_name }}</strong>
+                                        <span class="ms-2 badge bg-secondary">{{ cat_items|length }} article{{ cat_items|length|pluralize }}</span>
+                                    </button>
+                                </h2>
+                                <div id="invCatBody{{ cat_idx }}"
+                                     class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                     aria-labelledby="invCatHead{{ cat_idx }}"
+                                     data-bs-parent="#inventoryAccordion">
+                                    <div class="accordion-body p-2">
+                                        <table class="table table-sm table-borderless mb-0 align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:40%">Article</th>
+                                                    <th style="width:15%" class="text-center">Disponible</th>
+                                                    <th style="width:15%" class="text-center">Fournisseur</th>
+                                                    <th style="width:30%" class="text-center">Qté comptée (sur site)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in cat_items %}
+                                                <tr>
+                                                    <td>{{ item.name }}</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-secondary">{{ item.available_quantity }}</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {% if item.outside_quantity > 0 %}
+                                                        <span class="badge bg-warning text-dark">{{ item.outside_quantity }}</span>
+                                                        {% else %}
+                                                        <span class="text-muted">—</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="number"
+                                                               class="form-control form-control-sm inventory-qty-input"
+                                                               data-item-id="{{ item.id }}"
+                                                               data-item-name="{{ item.name }}"
+                                                               value="{{ item.available_quantity }}"
+                                                               min="0"
+                                                               style="width:90px; display:inline-block;">
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mt-3">
+                            <label for="inventoryNotes" class="form-label">Notes (optionnel)</label>
+                            <textarea class="form-control" id="inventoryNotes" name="notes" rows="2"
+                                      placeholder="Remarques sur cet inventaire..."></textarea>
+                        </div>
+
+                        <div id="inventoryFormErrors" class="alert alert-danger d-none mt-3"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Enregistrer
+                            <i class="bi bi-save"></i> Enregistrer l'inventaire
                         </button>
                     </div>
                 </form>

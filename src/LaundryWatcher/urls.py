@@ -110,4 +110,16 @@ urlpatterns = [
         name='delete_supplier'
     ),
 
+    # Routes de gestion des commandes
+    path(
+        'change-order/<int:order_id>/',
+        supplier.views.change_order,
+        name='change_order'
+    ),
+    path(
+        'delete-order/<int:order_id>/',
+        supplier.views.delete_order,
+        name='delete_order'
+    ),
+
 ]

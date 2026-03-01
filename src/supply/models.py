@@ -84,3 +84,57 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Inventory(models.Model):
+    """Instantané d'inventaire complet à une date donnée."""
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        'authentication.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='inventories'
+    )
+    notes = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        verbose_name = "Inventaire"
+        verbose_name_plural = "Inventaires"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Inventaire du {self.created_at.strftime('%d/%m/%Y %H:%M')}"
+
+
+class InventoryEntry(models.Model):
+    """Ligne d'un inventaire : quantité comptée pour un article donné."""
+    inventory = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name='entries'
+    )
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='inventory_entries'
+    )
+    counted_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text="Quantité comptée sur site lors de l'inventaire"
+    )
+    outside_quantity_snapshot = models.PositiveIntegerField(
+        default=0,
+        help_text="Quantité chez le fournisseur au moment de l'inventaire"
+    )
+
+    class Meta:
+        verbose_name = "Entrée d'inventaire"
+        verbose_name_plural = "Entrées d'inventaire"
+        unique_together = [['inventory', 'item']]
+
+    @property
+    def total_counted(self):
+        return self.counted_quantity + self.outside_quantity_snapshot
+
+    def __str__(self):
+        return f"{self.item.name} : {self.counted_quantity} (+ {self.outside_quantity_snapshot} fournisseur)"

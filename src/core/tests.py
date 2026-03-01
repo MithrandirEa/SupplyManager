@@ -7,9 +7,11 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from supply.models import Item, ItemsCategory
+import json
+from supply.models import Item, ItemsCategory, Inventory, InventoryEntry
 from supplier.models import Supplier, Order, OrderItem
 from core.services import DashboardService
+from core.forms import BulkInventoryForm
 
 
 User = get_user_model()
@@ -291,3 +293,121 @@ class DashboardViewTestCase(TestCase):
             30,
             f"Trop de requêtes SQL : {len(context.captured_queries)}"
         )
+
+
+class BulkInventoryFormTestCase(TestCase):
+    """Tests pour BulkInventoryForm"""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='inv_admin', password='pass', role=User.ADMIN
+        )
+        cat = ItemsCategory.objects.create(name='LingeTest')
+        self.item1 = Item.objects.create(
+            name='Serviette', category=cat,
+            total_quantity=50, available_quantity=40,
+            outside_quantity=5, created_by=self.admin
+        )
+        self.item2 = Item.objects.create(
+            name='Drap', category=cat,
+            total_quantity=30, available_quantity=25,
+            outside_quantity=2, created_by=self.admin
+        )
+
+    def _make_form(self, items_list, notes=''):
+        return BulkInventoryForm({
+            'items_data': json.dumps(items_list),
+            'notes': notes,
+        })
+
+    def test_valid_form_creates_inventory(self):
+        """Un formulaire valide crée un Inventory + InventoryEntry."""
+        form = self._make_form([
+            {'item_id': self.item1.id, 'quantity': 42},
+            {'item_id': self.item2.id, 'quantity': 28},
+        ])
+        self.assertTrue(form.is_valid(), form.errors)
+        inv = form.save(user=self.admin)
+        self.assertIsInstance(inv, Inventory)
+        self.assertEqual(inv.entries.count(), 2)
+        self.assertEqual(inv.created_by, self.admin)
+
+    def test_save_updates_item_last_inventory(self):
+        """save() met à jour available_quantity, total_quantity, last_inventory_quantity et last_inventory_date."""
+        form = self._make_form([
+            {'item_id': self.item1.id, 'quantity': 15},
+        ])
+        self.assertTrue(form.is_valid())
+        form.save(user=self.admin)
+        self.item1.refresh_from_db()
+        self.assertEqual(self.item1.last_inventory_quantity, 15)
+        self.assertIsNotNone(self.item1.last_inventory_date)
+        # available_quantity = counted
+        self.assertEqual(self.item1.available_quantity, 15)
+        # total_quantity = counted + outside_quantity
+        expected_total = 15 + self.item1.outside_quantity
+        self.assertEqual(self.item1.total_quantity, expected_total)
+
+    def test_save_stores_outside_snapshot(self):
+        """save() stocke outside_quantity_snapshot sur chaque InventoryEntry."""
+        self.item1.outside_quantity = 8
+        self.item1.save()
+        form = self._make_form([{'item_id': self.item1.id, 'quantity': 20}])
+        self.assertTrue(form.is_valid())
+        inv = form.save(user=self.admin)
+        entry = inv.entries.get(item=self.item1)
+        self.assertEqual(entry.outside_quantity_snapshot, 8)
+        self.assertEqual(entry.counted_quantity, 20)
+        self.assertEqual(entry.total_counted, 28)
+        # total_quantity mis à jour
+        self.item1.refresh_from_db()
+        self.assertEqual(self.item1.total_quantity, 28)
+        self.assertEqual(self.item1.available_quantity, 20)
+
+    def test_notes_saved(self):
+        """Les notes sont sauvegardées dans l'inventaire."""
+        form = self._make_form(
+            [{'item_id': self.item1.id, 'quantity': 10}],
+            notes='RAS, tout OK'
+        )
+        self.assertTrue(form.is_valid())
+        inv = form.save(user=self.admin)
+        self.assertEqual(inv.notes, 'RAS, tout OK')
+
+    def test_invalid_json_rejected(self):
+        """Un JSON invalide est rejeté."""
+        form = BulkInventoryForm({'items_data': 'pas_du_json', 'notes': ''})
+        self.assertFalse(form.is_valid())
+        self.assertIn('items_data', form.errors)
+
+    def test_empty_list_rejected(self):
+        """Une liste vide est rejetée."""
+        form = self._make_form([])
+        self.assertFalse(form.is_valid())
+
+    def test_negative_quantity_rejected(self):
+        """Une quantité négative est rejetée."""
+        form = self._make_form([{'item_id': self.item1.id, 'quantity': -5}])
+        self.assertFalse(form.is_valid())
+
+    def test_unknown_item_rejected(self):
+        """Un item_id inexistant est rejeté."""
+        form = self._make_form([{'item_id': 99999, 'quantity': 10}])
+        self.assertFalse(form.is_valid())
+
+    def test_ajax_endpoint_saves_inventory(self):
+        """L'endpoint AJAX /dashboard/update-inventory/ crée un inventaire."""
+        self.client.login(username='inv_admin', password='pass')
+        data = {
+            'items_data': json.dumps([
+                {'item_id': self.item1.id, 'quantity': 7},
+                {'item_id': self.item2.id, 'quantity': 3},
+            ]),
+            'notes': '',
+        }
+        response = self.client.post(reverse('update_inventory_ajax'), data)
+        self.assertEqual(response.status_code, 200, response.content)
+        resp_data = response.json()
+        self.assertTrue(resp_data['success'], resp_data)
+        self.assertEqual(Inventory.objects.count(), 1)
+        self.assertEqual(InventoryEntry.objects.count(), 2)

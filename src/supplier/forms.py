@@ -177,3 +177,110 @@ class QuickOrderForm(forms.ModelForm):
                 )
         
         return order
+
+
+class ChangeOrderForm(forms.ModelForm):
+    """Formulaire pour modifier une commande existante"""
+    
+    items = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False,
+        initial='[]'
+    )
+    
+    class Meta:
+        model = Order
+        fields = ['supplier', 'expected_return_date', 'actual_return_date', 'status', 'notes']
+        labels = {
+            'supplier': 'Fournisseur',
+            'expected_return_date': 'Date de retour attendue',
+            'actual_return_date': 'Date de retour réelle',
+            'status': 'Statut',
+            'notes': 'Notes',
+        }
+        widgets = {
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'expected_return_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+            'actual_return_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        actual_return_date = cleaned_data.get('actual_return_date')
+        status = cleaned_data.get('status')
+        
+        # Si la commande est terminée, la date de retour réelle est obligatoire
+        if status == 'completed' and not actual_return_date:
+            raise forms.ValidationError(
+                "La date de retour réelle est obligatoire pour une commande terminée."
+            )
+        
+        return cleaned_data
+    
+    def clean_items(self):
+        """Valide les items sélectionnés"""
+        import json
+        from supply.models import Item
+        
+        items_json = self.cleaned_data.get('items', '[]')
+        
+        if not items_json or items_json == '[]':
+            return []
+        
+        try:
+            items_data = json.loads(items_json)
+        except json.JSONDecodeError:
+            raise forms.ValidationError("Format d'items invalide.")
+        
+        validated_items = []
+        for item_data in items_data:
+            try:
+                # Vérifier que les champs requis sont présents
+                if 'item_id' not in item_data or 'quantity' not in item_data:
+                    raise ValueError("Champs requis manquants")
+                
+                item_id = int(item_data.get('item_id'))
+                quantity = int(item_data.get('quantity'))
+                
+                if quantity <= 0:
+                    raise forms.ValidationError(
+                        "La quantité doit être supérieure à 0."
+                    )
+                
+                item = Item.objects.get(pk=item_id)
+                validated_items.append({
+                    'item': item,
+                    'quantity': quantity
+                })
+            except (ValueError, TypeError, Item.DoesNotExist, KeyError):
+                raise forms.ValidationError(
+                    "Article invalide dans la commande."
+                )
+        
+        return validated_items
+    
+    def save(self, commit=True):
+        from supplier.models import OrderItem
+        
+        order = super().save(commit=commit)
+        
+        if commit:
+            # Supprimer tous les OrderItems existants
+            order.order_items.all().delete()
+            
+            # Créer les nouveaux OrderItems
+            items_data = self.cleaned_data.get('items', [])
+            for item_data in items_data:
+                OrderItem.objects.create(
+                    order=order,
+                    item=item_data['item'],
+                    quantity=item_data['quantity']
+                )
+        
+        return order

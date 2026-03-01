@@ -63,3 +63,63 @@ def delete_supplier(request, supplier_id):
     supplier = Supplier.objects.get(id=supplier_id)
     supplier.delete()
     return redirect('suppliers_management')
+
+
+@login_required
+def change_order(request, order_id):
+    """Vue pour modifier une commande"""
+    from supplier.models import Order
+    from supplier.forms import ChangeOrderForm
+    from django.contrib import messages
+    from supply.models import Item, ItemsCategory
+    from collections import defaultdict
+    import json
+    
+    order = Order.objects.get(id=order_id)
+    
+    if request.method == 'POST':
+        form = ChangeOrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Commande mise à jour avec succès.')
+            return redirect('supplies_management')
+    else:
+        form = ChangeOrderForm(instance=order)
+    
+    # Récupérer tous les items groupés par catégorie
+    items_by_category = defaultdict(list)
+    all_items = Item.objects.filter(
+        is_available=True
+    ).select_related('category').order_by('category__name', 'name')
+    
+    for item in all_items:
+        category_name = item.category.name if item.category else "Sans catégorie"
+        items_by_category[category_name].append(item)
+    
+    # Récupérer les items actuels de la commande
+    current_items = []
+    for order_item in order.order_items.all():
+        current_items.append({
+            'item_id': str(order_item.item.id),
+            'item_name': order_item.item.name,
+            'quantity': order_item.quantity
+        })
+    
+    return render(request, 'change_order.html', {
+        'form': form,
+        'order': order,
+        'items_by_category': dict(items_by_category),
+        'current_items_json': json.dumps(current_items),
+    })
+
+
+@login_required
+def delete_order(request, order_id):
+    """Vue pour supprimer une commande"""
+    from supplier.models import Order
+    from django.contrib import messages
+    
+    order = Order.objects.get(id=order_id)
+    order.delete()
+    messages.success(request, 'Commande supprimée avec succès.')
+    return redirect('supplies_management')

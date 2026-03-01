@@ -381,15 +381,14 @@
     }
 
     /**
-     * Initialise le modal d'inventaire
+     * Initialise le modal d'inventaire bulk.
+     * Ajoute un bouton par ligne d'article pour ouvrir le modal et surligner l'article.
      */
     function initInventoryModal() {
-        // Ajouter un bouton "Enregistrer inventaire" sur chaque ligne d'article
         document.querySelectorAll('[data-item-id]').forEach(row => {
             const itemId = row.dataset.itemId;
             const itemName = row.dataset.itemName;
-            
-            // Créer un bouton d'action si pas déjà présent
+
             if (!row.querySelector('.btn-inventory')) {
                 const actionCell = row.querySelector('.action-cell');
                 if (actionCell) {
@@ -405,16 +404,38 @@
     }
 
     /**
-     * Ouvre le modal d'inventaire
+     * Ouvre le modal d'inventaire.
+     * Si itemId est fourni, ouvre l'accordéon de la catégorie de l'article
+     * et met en évidence sa ligne.
      */
     function openInventoryModal(itemId, itemName) {
-        document.getElementById('inventoryItemId').value = itemId;
-        document.getElementById('inventoryItemName').textContent = itemName;
-        document.getElementById('inventoryQuantity').value = '';
         document.getElementById('inventoryFormErrors').classList.add('d-none');
-        
+        document.getElementById('inventoryNotes').value = '';
+
         const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
         modal.show();
+
+        if (itemId) {
+            // Attendre l'animation du modal puis scroller vers l'input de l'article
+            document.getElementById('inventoryModal').addEventListener('shown.bs.modal', function onShown() {
+                const input = document.querySelector(
+                    `.inventory-qty-input[data-item-id="${itemId}"]`
+                );
+                if (input) {
+                    // Ouvrir le panneau accordéon parent s'il est fermé
+                    const collapseEl = input.closest('.accordion-collapse');
+                    if (collapseEl && !collapseEl.classList.contains('show')) {
+                        const bsCollapse = new bootstrap.Collapse(collapseEl, { toggle: true });
+                    }
+                    setTimeout(() => {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        input.classList.add('border-primary', 'border-2');
+                        input.focus();
+                    }, 350);
+                }
+                this.removeEventListener('shown.bs.modal', onShown);
+            });
+        }
     }
 
     /**
@@ -469,21 +490,23 @@
         expectedDateInput.value = today.toISOString().split('T')[0];
         expectedDateInput.min = new Date().toISOString().split('T')[0];
 
-        // Gérer l'ajout d'items
-        const btnAddItem = document.getElementById('btnAddItem');
-        const itemSelect = document.getElementById('itemSelect');
-        const itemQuantity = document.getElementById('itemQuantity');
-        
+        // Gérer l'ajout d'items via les boutons dans le tableau
         let orderItems = [];
         
-        if (btnAddItem) {
-            btnAddItem.addEventListener('click', () => {
-                const itemId = itemSelect.value;
-                const itemName = itemSelect.options[itemSelect.selectedIndex]?.dataset.name;
-                const quantity = parseInt(itemQuantity.value);
+        // Délégation d'événement pour les boutons d'ajout
+        const accordion = document.getElementById('itemsCategoryAccordion');
+        if (accordion) {
+            accordion.addEventListener('click', (e) => {
+                const addBtn = e.target.closest('.btn-add-item');
+                if (!addBtn) return;
                 
-                if (!itemId || !quantity || quantity <= 0) {
-                    showNotification('Veuillez sélectionner un article et une quantité valide', 'warning');
+                const itemId = addBtn.dataset.itemId;
+                const itemName = addBtn.dataset.itemName;
+                const quantityInput = document.getElementById(`qty_${itemId}`);
+                const quantity = parseInt(quantityInput.value);
+                
+                if (!quantity || quantity <= 0) {
+                    showNotification('La quantité doit être supérieure à 0', 'warning');
                     return;
                 }
                 
@@ -492,6 +515,7 @@
                 if (existingIndex >= 0) {
                     // Mettre à jour la quantité
                     orderItems[existingIndex].quantity = quantity;
+                    showNotification(`Quantité de "${itemName}" mise à jour`, 'success');
                 } else {
                     // Ajouter le nouvel item
                     orderItems.push({
@@ -499,13 +523,13 @@
                         item_name: itemName,
                         quantity: quantity
                     });
+                    showNotification(`"${itemName}" ajouté à la commande`, 'success');
                 }
                 
                 updateOrderItemsDisplay(orderItems);
                 
-                // Réinitialiser la sélection
-                itemSelect.value = '';
-                itemQuantity.value = 1;
+                // Réinitialiser la quantité à 1
+                quantityInput.value = 1;
             });
         }
         
@@ -565,6 +589,10 @@
                 const today = new Date();
                 today.setDate(today.getDate() + 7);
                 expectedDateInput.value = today.toISOString().split('T')[0];
+                
+                // Réinitialiser toutes les quantités à 1
+                const quantityInputs = document.querySelectorAll('.item-quantity');
+                quantityInputs.forEach(input => input.value = 1);
             });
         }
 
@@ -614,15 +642,28 @@
      * Initialise les formulaires d'inventaire et de contrat
      */
     function initActionForms() {
-        // Formulaire d'inventaire
+        // Formulaire d'inventaire (bulk)
         const inventoryForm = document.getElementById('inventoryForm');
         if (inventoryForm) {
             inventoryForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                const formData = new FormData(e.target);
+
                 const errorDiv = document.getElementById('inventoryFormErrors');
-                
+
+                // Collecter toutes les quantités comme JSON
+                const items = [];
+                document.querySelectorAll('.inventory-qty-input').forEach(input => {
+                    items.push({
+                        item_id: parseInt(input.dataset.itemId, 10),
+                        quantity: parseInt(input.value || '0', 10)
+                    });
+                });
+
+                // Mettre à jour le champ caché
+                document.getElementById('inventoryItemsData').value = JSON.stringify(items);
+
+                const formData = new FormData(inventoryForm);
+
                 try {
                     const response = await fetch('/dashboard/update-inventory/', {
                         method: 'POST',
@@ -631,14 +672,13 @@
                             'X-CSRFToken': formData.get('csrfmiddlewaretoken')
                         }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         showNotification(data.message, 'success');
                         bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
                         errorDiv.classList.add('d-none');
-                        
                         setTimeout(() => window.location.reload(), 1000);
                     } else {
                         errorDiv.textContent = formatErrors(data.errors);
