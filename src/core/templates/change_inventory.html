@@ -1,0 +1,150 @@
+{% extends 'base_sensible_form.html' %}
+{% load static %}
+
+{% block title %}Modifier l'inventaire — LaundryWatcher{% endblock %}
+
+{% block content %}
+<main class="container mt-4 mb-5">
+
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <a href="{% url 'supplies_management' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <h2 class="mb-0">
+            <i class="bi bi-clipboard-check"></i>
+            Modifier l'inventaire du {{ inventory.created_at|date:"d/m/Y à H:i" }}
+        </h2>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="changeInventoryForm" novalidate>
+        {% csrf_token %}
+        <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <p class="mb-0 text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Saisissez la quantité <strong>comptée sur site</strong> pour chaque article.
+                    Le stock disponible et le total seront recalculés en tenant compte des quantités chez le fournisseur.
+                </p>
+            </div>
+            <div class="card-body p-0">
+                <div class="accordion" id="inventoryAccordion">
+                    {% for category_name, cat_items in items_by_category.items %}
+                    {% with forloop.counter as cat_idx %}
+                    <div class="accordion-item rounded-0 border-start-0 border-end-0">
+                        <h2 class="accordion-header" id="invHead{{ cat_idx }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#invBody{{ cat_idx }}"
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-controls="invBody{{ cat_idx }}">
+                                <strong>{{ category_name }}</strong>
+                                <span class="ms-2 badge bg-secondary">
+                                    {{ cat_items|length }} article{{ cat_items|length|pluralize }}
+                                </span>
+                            </button>
+                        </h2>
+                        <div id="invBody{{ cat_idx }}"
+                             class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                             aria-labelledby="invHead{{ cat_idx }}">
+                            <div class="accordion-body p-0">
+                                <table class="table table-sm table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3" style="width:40%">Article</th>
+                                            <th class="text-center" style="width:15%">Disponible actuel</th>
+                                            <th class="text-center" style="width:15%">Chez fournisseur</th>
+                                            <th class="text-center" style="width:30%">Qté comptée (sur site)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item, counted_qty, outside_qty in cat_items %}
+                                        <tr>
+                                            <td class="ps-3">{{ item.name }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.available_quantity }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if outside_qty > 0 %}
+                                                <span class="badge bg-warning text-dark">{{ outside_qty }}</span>
+                                                {% else %}
+                                                <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="number"
+                                                       class="form-control form-control-sm inventory-qty-input mx-auto"
+                                                       data-item-id="{{ item.id }}"
+                                                       data-item-name="{{ item.name }}"
+                                                       value="{{ counted_qty }}"
+                                                       min="0"
+                                                       style="width:90px;">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <label for="notesField" class="form-label fw-semibold">Notes (optionnel)</label>
+                <textarea class="form-control" id="notesField" name="notes" rows="2"
+                          placeholder="Remarques sur cet inventaire...">{{ form.initial.notes }}</textarea>
+            </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Enregistrer les modifications
+            </button>
+            <a href="{% url 'supplies_management' %}" class="btn btn-secondary">
+                Annuler
+            </a>
+        </div>
+    </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('changeInventoryForm').addEventListener('submit', function (e) {
+    const items = [];
+    document.querySelectorAll('.inventory-qty-input').forEach(input => {
+        items.push({
+            item_id: parseInt(input.dataset.itemId, 10),
+            quantity: parseInt(input.value || '0', 10)
+        });
+    });
+    document.getElementById('inventoryItemsData').value = JSON.stringify(items);
+});
+</script>
+{% endblock %}

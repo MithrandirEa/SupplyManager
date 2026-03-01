@@ -94,6 +94,82 @@ class BulkInventoryForm(forms.Form):
         return inventory
 
 
+class ChangeInventoryForm(forms.Form):
+    """
+    Formulaire pour modifier un inventaire existant.
+    Même champ items_data que BulkInventoryForm, mais update au lieu de create.
+    """
+    items_data = forms.CharField(widget=forms.HiddenInput())
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
+
+    def clean_items_data(self):
+        raw = self.cleaned_data['items_data']
+        try:
+            entries = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            raise forms.ValidationError("Format des données invalide.")
+        if not isinstance(entries, list) or len(entries) == 0:
+            raise forms.ValidationError("Aucun article fourni.")
+        cleaned = []
+        for entry in entries:
+            try:
+                item_id = int(entry['item_id'])
+                quantity = int(entry['quantity'])
+            except (KeyError, ValueError, TypeError):
+                raise forms.ValidationError("Données d'article mal formées.")
+            if quantity < 0:
+                raise forms.ValidationError(
+                    "La quantité ne peut pas être négative."
+                )
+            try:
+                item = Item.objects.get(pk=item_id)
+            except Item.DoesNotExist:
+                raise forms.ValidationError(
+                    f"Article introuvable (id={item_id})."
+                )
+            cleaned.append({'item': item, 'quantity': quantity})
+        return cleaned
+
+    def save(self, inventory):
+        """Met à jour un Inventory existant et recalcule les stocks."""
+        entries_data = self.cleaned_data['items_data']
+        notes = self.cleaned_data.get('notes', '')
+
+        inventory.notes = notes
+        inventory.save(update_fields=['notes'])
+
+        # Supprimer les anciennes entrées et recréer depuis zéro
+        inventory.entries.all().delete()
+
+        now = timezone.now()
+        for entry in entries_data:
+            item = entry['item']
+            counted = entry['quantity']
+            outside = item.outside_quantity
+
+            InventoryEntry.objects.create(
+                inventory=inventory,
+                item=item,
+                counted_quantity=counted,
+                outside_quantity_snapshot=outside,
+            )
+            item.available_quantity = counted
+            item.total_quantity = counted + outside
+            item.last_inventory_quantity = counted
+            item.last_inventory_date = now
+            item.save(update_fields=[
+                'available_quantity',
+                'total_quantity',
+                'last_inventory_quantity',
+                'last_inventory_date',
+            ])
+
+        return inventory
+
+
 class InventoryUpdateForm(forms.Form):
     """
     Formulaire pour enregistrer un inventaire (article unique — conservé pour compatibilité)

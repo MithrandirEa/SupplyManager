@@ -123,3 +123,87 @@ def delete_order(request, order_id):
     order.delete()
     messages.success(request, 'Commande supprimée avec succès.')
     return redirect('supplies_management')
+
+@login_required
+def receive_order(request, order_id):
+    """
+    Vue pour réceptionner une commande :
+    l'utilisateur saisit la quantité reçue pour chaque article.
+    Les articles non reçus sont signalés comme restés chez le fournisseur.
+    """
+    from supplier.models import Order
+    from django.contrib import messages
+    from django.utils import timezone
+
+    order = Order.objects.prefetch_related(
+        'order_items__item'
+    ).get(id=order_id)
+
+    if order.status == 'completed':
+        messages.warning(request, 'Cette commande est déjà réceptionnée.')
+        return redirect('supplies_management')
+
+    order_items = list(order.order_items.select_related('item').all())
+
+    if request.method == 'POST':
+        errors = []
+        receptions = []
+
+        for oi in order_items:
+            key = f'received_qty_{oi.id}'
+            raw = request.POST.get(key, '').strip()
+            try:
+                received = int(raw)
+                if received < 0:
+                    raise ValueError
+                if received > oi.quantity:
+                    errors.append(
+                        f"{oi.item.name} : la quantité reçue ({received}) "
+                        f"dépasse la quantité commandée ({oi.quantity})."
+                    )
+            except (ValueError, TypeError):
+                errors.append(
+                    f"{oi.item.name} : valeur invalide."
+                )
+                continue
+            receptions.append((oi, received))
+
+        if errors:
+            return render(request, 'receive_order.html', {
+                'order': order,
+                'order_items': order_items,
+                'errors': errors,
+                'post_data': request.POST,
+            })
+
+        # Appliquer les réceptions
+        for oi, received in receptions:
+            remaining = oi.quantity - received
+            item = oi.item
+
+            # Mettre à jour les stocks
+            item.available_quantity += received
+            item.outside_quantity = max(0, item.outside_quantity - received)
+            item.save(update_fields=['available_quantity', 'outside_quantity'])
+
+            # Enregistrer la quantité reçue sur l'OrderItem
+            oi.received_quantity = received
+            oi.save(update_fields=['received_quantity'])
+
+        # Clôturer la commande
+        order.status = 'completed'
+        order.actual_return_date = timezone.now().date()
+        order.save(update_fields=['status', 'actual_return_date'])
+
+        messages.success(
+            request,
+            f'Commande #{order.id} réceptionnée avec succès.'
+        )
+        return redirect('supplies_management')
+
+    return render(request, 'receive_order.html', {
+        'order': order,
+        'order_items': order_items,
+        'errors': [],
+        'post_data': {},
+    })

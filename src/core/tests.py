@@ -11,7 +11,7 @@ import json
 from supply.models import Item, ItemsCategory, Inventory, InventoryEntry
 from supplier.models import Supplier, Order, OrderItem
 from core.services import DashboardService
-from core.forms import BulkInventoryForm
+from core.forms import BulkInventoryForm, ChangeInventoryForm
 
 
 User = get_user_model()
@@ -411,3 +411,65 @@ class BulkInventoryFormTestCase(TestCase):
         self.assertTrue(resp_data['success'], resp_data)
         self.assertEqual(Inventory.objects.count(), 1)
         self.assertEqual(InventoryEntry.objects.count(), 2)
+
+
+class ChangeInventoryTestCase(TestCase):
+    """Tests pour ChangeInventoryForm et la vue change_inventory."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='inv_admin2', password='pass', role=User.ADMIN
+        )
+        cat = ItemsCategory.objects.create(name='LingeChange')
+        self.item = Item.objects.create(
+            name='Serviette', category=cat,
+            total_quantity=30, available_quantity=25,
+            outside_quantity=5, created_by=self.admin
+        )
+        self.inventory = Inventory.objects.create(created_by=self.admin)
+        InventoryEntry.objects.create(
+            inventory=self.inventory,
+            item=self.item,
+            counted_quantity=20,
+            outside_quantity_snapshot=5,
+        )
+
+    def test_change_inventory_form_updates_entries(self):
+        """ChangeInventoryForm.save() met à jour les entrées et les stocks."""
+        form = ChangeInventoryForm({
+            'items_data': json.dumps([{'item_id': self.item.id, 'quantity': 12}]),
+            'notes': 'test modif',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save(self.inventory)
+        self.inventory.refresh_from_db()
+        self.assertEqual(self.inventory.notes, 'test modif')
+        entry = self.inventory.entries.get(item=self.item)
+        self.assertEqual(entry.counted_quantity, 12)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.available_quantity, 12)
+        self.assertEqual(self.item.total_quantity, 12 + self.item.outside_quantity)
+
+    def test_change_inventory_view_get(self):
+        """La vue change_inventory affiche le formulaire en GET."""
+        self.client.login(username='inv_admin2', password='pass')
+        response = self.client.get(
+            reverse('change_inventory', kwargs={'inventory_id': self.inventory.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'inventoryAccordion')
+
+    def test_change_inventory_view_post(self):
+        """La vue change_inventory met à jour en POST et redirige."""
+        self.client.login(username='inv_admin2', password='pass')
+        data = {
+            'items_data': json.dumps([{'item_id': self.item.id, 'quantity': 8}]),
+            'notes': 'mise à jour',
+        }
+        response = self.client.post(
+            reverse('change_inventory', kwargs={'inventory_id': self.inventory.id}),
+            data
+        )
+        self.assertRedirects(response, reverse('supplies_management'))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.available_quantity, 8)

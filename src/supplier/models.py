@@ -133,6 +133,12 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(
         verbose_name="Quantité"
     )
+    received_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Quantité reçue",
+        help_text="Rempli lors de la réception de la commande"
+    )
     notes = models.CharField(
         max_length=255,
         blank=True,
@@ -147,3 +153,10 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item.name} x{self.quantity} (Commande #{self.order.id})"
+
+    @property
+    def remaining_at_supplier(self):
+        """Quantité restée chez le fournisseur après réception."""
+        if self.received_quantity is None:
+            return None
+        return max(0, self.quantity - self.received_quantity)

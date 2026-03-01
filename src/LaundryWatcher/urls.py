@@ -117,9 +117,28 @@ urlpatterns = [
         name='change_order'
     ),
     path(
+        'receive-order/<int:order_id>/',
+        supplier.views.receive_order,
+        name='receive_order'
+    ),
+    path(
         'delete-order/<int:order_id>/',
         supplier.views.delete_order,
         name='delete_order'
     ),
+
+    # Routes de gestion des inventaires
+    path(
+        'change-inventory/<int:inventory_id>/',
+        core.views.change_inventory,
+        name='change_inventory'
+    ),
+
+    # Routes d'export
+    path('export/items/', core.views.export_items, name='export_items'),
+    path('export/orders/', core.views.export_orders, name='export_orders'),
+    path('export/orders/<int:order_id>/', core.views.export_order, name='export_order'),
+    path('export/inventories/', core.views.export_inventories, name='export_inventories'),
+    path('export/inventories/<int:inventory_id>/', core.views.export_inventory, name='export_inventory'),
 
 ]

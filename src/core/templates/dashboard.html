@@ -48,12 +48,18 @@
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrderModal">
                             <i class="bi bi-plus-circle"></i> Créer une commande
                         </button>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#receiveOrderModal">
+                            <i class="bi bi-box-arrow-in-down"></i> Réceptionner une commande
+                            {% if pending_orders %}
+                            <span class="badge bg-light text-dark ms-1">{{ pending_orders|length }}</span>
+                            {% endif %}
+                        </button>
                         <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#inventoryModal">
                             <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
                         </button>
                     </div>
                     <small class="text-muted d-block mt-2">
-                        Utilisez les boutons ci-dessus pour créer une commande ou enregistrer un inventaire.
+                        Utilisez les boutons ci-dessus pour créer une commande, réceptionner ou enregistrer un inventaire.
                     </small>
                 </div>
             </div>
@@ -786,6 +792,53 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal : Réceptionner une commande -->
+    <div class="modal fade" id="receiveOrderModal" tabindex="-1" aria-labelledby="receiveOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiveOrderModalLabel">
+                        <i class="bi bi-box-arrow-in-down"></i> Réceptionner une commande
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if pending_orders %}
+                    <p class="text-muted mb-3">Sélectionnez la commande à réceptionner :</p>
+                    <div class="list-group">
+                        {% for order in pending_orders %}
+                        <a href="{% url 'receive_order' order_id=order.id %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>#{{ order.id }} — {{ order.supplier.name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ order.order_items.count }} article{{ order.order_items.count|pluralize }} &mdash;
+                                    Retour attendu le {{ order.expected_return_date|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                            {% if order.status == 'delayed' %}
+                            <span class="badge bg-danger">En retard</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+                        Aucune commande en attente de réception.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
             </div>
         </div>
     </div>

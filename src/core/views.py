@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from supplier.models import Supplier
 from supply.models import Item
 from .services import DashboardService
-from .forms import BulkInventoryForm, InventoryUpdateForm, ContractExtensionForm
+from .forms import BulkInventoryForm, ChangeInventoryForm, ContractExtensionForm
 from supplier.forms import QuickOrderForm
 
 
@@ -28,14 +28,24 @@ def staff_management(request):
 def supplies_management(request):
     from supplier.models import Order
     from supply.models import Inventory
+    from collections import defaultdict
 
-    items = Item.objects.all().order_by('category', 'name')
+    items = Item.objects.all().order_by('category__name', 'name')
     orders = Order.objects.select_related(
         'supplier', 'created_by'
     ).prefetch_related('order_items__item').all().order_by('-order_date')
     inventories = Inventory.objects.select_related(
         'created_by'
     ).prefetch_related('entries__item__category').all()
+
+    # Groupement par catégorie pour le modal inventaire
+    items_by_category = defaultdict(list)
+    available_items = Item.objects.filter(
+        is_available=True
+    ).select_related('category').order_by('category__name', 'name')
+    for item in available_items:
+        cat = item.category.name if item.category else "Sans catégorie"
+        items_by_category[cat].append(item)
 
     # Compter les commandes non terminées
     pending_orders_count = orders.exclude(status='completed').count()
@@ -45,6 +55,7 @@ def supplies_management(request):
         'orders': orders,
         'inventories': inventories,
         'pending_orders_count': pending_orders_count,
+        'items_by_category': dict(items_by_category),
     }
     return render(request, 'supplies_management.html', context)
 
@@ -107,6 +118,12 @@ def dashboard(request):
         category_name = item.category.name if item.category else "Sans catégorie"
         items_by_category[category_name].append(item)
 
+    # Récupération des commandes non terminées pour la réception
+    from supplier.models import Order
+    pending_orders = Order.objects.filter(
+        status__in=['pending', 'delayed']
+    ).select_related('supplier').prefetch_related('order_items__item').order_by('expected_return_date')
+
     # Préparation du contexte
     context = {
         # Stocks
@@ -122,6 +139,7 @@ def dashboard(request):
         # Commandes
         'outdated_orders': dashboard_data['outdated_orders'],
         'waited_orders': dashboard_data['waited_orders'],
+        'pending_orders': pending_orders,
 
         # Compteurs pour badges
         'alerts_count': alerts_count,
@@ -231,3 +249,148 @@ def extend_contract_ajax(request):
             'success': False,
             'errors': form.errors
         }, status=400)
+
+
+@login_required
+def change_inventory(request, inventory_id):
+    """Vue pour modifier un inventaire existant."""
+    from supply.models import Inventory, Item
+    from collections import defaultdict
+
+    inventory = Inventory.objects.prefetch_related(
+        'entries__item__category'
+    ).get(pk=inventory_id)
+
+    entry_map = {
+        e.item_id: (e.counted_quantity, e.outside_quantity_snapshot)
+        for e in inventory.entries.all()
+    }
+
+    all_items = Item.objects.filter(
+        is_available=True
+    ).select_related('category').order_by('category__name', 'name')
+
+    items_by_category = defaultdict(list)
+    for item in all_items:
+        cat = item.category.name if item.category else "Sans catégorie"
+        if item.id in entry_map:
+            counted, outside = entry_map[item.id]
+        else:
+            counted = item.available_quantity
+            outside = item.outside_quantity
+        items_by_category[cat].append((item, counted, outside))
+
+    if request.method == 'POST':
+        form = ChangeInventoryForm(request.POST)
+        if form.is_valid():
+            form.save(inventory)
+            messages.success(
+                request,
+                f'Inventaire du {inventory.created_at.strftime("%d/%m/%Y %H:%M")} '
+                f'mis à jour.'
+            )
+            return redirect('supplies_management')
+    else:
+        form = ChangeInventoryForm(initial={'notes': inventory.notes})
+
+    return render(request, 'change_inventory.html', {
+        'inventory': inventory,
+        'items_by_category': dict(items_by_category),
+        'form': form,
+    })
+
+
+# ─────────────────────────────────────────────
+#  Vues d'export
+# ─────────────────────────────────────────────
+
+@login_required
+def export_items(request):
+    """Export CSV ou Excel de tous les articles."""
+    from .exports import export_items_csv, export_items_excel
+    fmt = request.GET.get('fmt', 'csv')
+    items = Item.objects.select_related('category').prefetch_related(
+        'suppliers'
+    ).order_by('category__name', 'name')
+    if fmt == 'excel':
+        return export_items_excel(items)
+    return export_items_csv(items)
+
+
+@login_required
+def export_orders(request):
+    """
+    Export commandes.
+    ?fmt=csv|excel  &  ?scope=list|all-detail
+    """
+    from supplier.models import Order
+    from .exports import (
+        export_orders_list_csv, export_orders_list_excel,
+        export_orders_all_detail_csv, export_orders_all_detail_excel,
+    )
+    fmt = request.GET.get('fmt', 'csv')
+    scope = request.GET.get('scope', 'list')
+    orders = Order.objects.select_related('supplier', 'created_by').prefetch_related(
+        'order_items__item__category'
+    ).order_by('-order_date')
+    if scope == 'all-detail':
+        if fmt == 'excel':
+            return export_orders_all_detail_excel(orders)
+        return export_orders_all_detail_csv(orders)
+    # list
+    if fmt == 'excel':
+        return export_orders_list_excel(orders)
+    return export_orders_list_csv(orders)
+
+
+@login_required
+def export_order(request, order_id):
+    """Export CSV ou Excel du détail d'une commande."""
+    from supplier.models import Order
+    from .exports import export_order_detail_csv, export_order_detail_excel
+    fmt = request.GET.get('fmt', 'csv')
+    order = Order.objects.select_related('supplier').prefetch_related(
+        'order_items__item__category'
+    ).get(pk=order_id)
+    if fmt == 'excel':
+        return export_order_detail_excel(order)
+    return export_order_detail_csv(order)
+
+
+@login_required
+def export_inventories(request):
+    """
+    Export inventaires.
+    ?fmt=csv|excel  &  ?scope=list|all-detail
+    """
+    from supply.models import Inventory
+    from .exports import (
+        export_inventories_list_csv, export_inventories_list_excel,
+        export_inventories_all_detail_csv, export_inventories_all_detail_excel,
+    )
+    fmt = request.GET.get('fmt', 'csv')
+    scope = request.GET.get('scope', 'list')
+    inventories = Inventory.objects.select_related('created_by').prefetch_related(
+        'entries__item__category'
+    ).order_by('-created_at')
+    if scope == 'all-detail':
+        if fmt == 'excel':
+            return export_inventories_all_detail_excel(inventories)
+        return export_inventories_all_detail_csv(inventories)
+    if fmt == 'excel':
+        return export_inventories_list_excel(inventories)
+    return export_inventories_list_csv(inventories)
+
+
+@login_required
+def export_inventory(request, inventory_id):
+    """Export CSV ou Excel du détail d'un inventaire."""
+    from supply.models import Inventory
+    from .exports import export_inventory_detail_csv, export_inventory_detail_excel
+    fmt = request.GET.get('fmt', 'csv')
+    inventory = Inventory.objects.select_related('created_by').prefetch_related(
+        'entries__item__category'
+    ).get(pk=inventory_id)
+    if fmt == 'excel':
+        return export_inventory_detail_excel(inventory)
+    return export_inventory_detail_csv(inventory)

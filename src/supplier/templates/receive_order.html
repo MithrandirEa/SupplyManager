@@ -1,0 +1,104 @@
+{% extends 'base_sensible_form.html' %}
+{% load static %}
+{% block title %}Réceptionner la commande #{{ order.id }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<div class="container mt-4" style="max-width: 860px;">
+    <h2 class="mb-1">
+        <i class="bi bi-box-arrow-in-down"></i>
+        Réceptionner la commande #{{ order.id }}
+    </h2>
+    <p class="text-muted mb-4">
+        Fournisseur : <strong>{{ order.supplier.name }}</strong> &mdash;
+        Commandée le {{ order.order_date|date:"d/m/Y" }} &mdash;
+        Retour attendu le {{ order.expected_return_date|date:"d/m/Y" }}
+    </p>
+
+    {% if errors %}
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="alert alert-light border mb-4">
+        <i class="bi bi-info-circle"></i>
+        Pour chaque article, indiquez la <strong>quantité effectivement reçue</strong>.
+        La colonne <em>Reste fournisseur</em> se calcule automatiquement : elle représente
+        les articles qui n'ont pas encore été retournés et arriveront avec une prochaine commande.
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Article</th>
+                    <th class="text-center" style="width:140px;">Commandé</th>
+                    <th class="text-center" style="width:160px;">Reçu</th>
+                    <th class="text-center" style="width:160px;">Reste fournisseur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for oi in order_items %}
+                <tr>
+                    <td>
+                        <strong>{{ oi.item.name }}</strong>
+                        <br><small class="text-muted">{{ oi.item.category.name }}</small>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary fs-6">{{ oi.quantity }}</span>
+                    </td>
+                    <td class="text-center">
+                        <input type="number"
+                               name="received_qty_{{ oi.id }}"
+                               id="recv_{{ oi.id }}"
+                               class="form-control form-control-sm text-center received-input"
+                               data-ordered="{{ oi.quantity }}"
+                               data-remaining-id="rem_{{ oi.id }}"
+                               value="{{ oi.quantity }}"
+                               min="0"
+                               max="{{ oi.quantity }}"
+                               style="width:90px; display:inline-block;">
+                    </td>
+                    <td class="text-center">
+                        <span id="rem_{{ oi.id }}" class="badge fs-6 bg-warning text-dark">0</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Valider la réception
+            </button>
+            <a href="{% url 'supplies_management' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function updateRemaining(input) {
+        const ordered = parseInt(input.dataset.ordered, 10);
+        const received = parseInt(input.value, 10) || 0;
+        const remaining = Math.max(0, ordered - received);
+        const remSpan = document.getElementById(input.dataset.remainingId);
+        remSpan.textContent = remaining;
+        if (remaining > 0) {
+            remSpan.className = 'badge fs-6 bg-warning text-dark';
+        } else {
+            remSpan.className = 'badge fs-6 bg-success';
+        }
+    }
+
+    document.querySelectorAll('.received-input').forEach(function (input) {
+        updateRemaining(input);
+        input.addEventListener('input', function () { updateRemaining(this); });
+    });
+});
+</script>
+{% endblock %}
