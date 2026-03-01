@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - LaundryWatcher{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold text-dark mb-2">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </h1>
+                    <p class="text-muted">
+                        Vue d'ensemble des stocks, alertes et commandes
+                    </p>
+                </div>
+                <div>
+                    {% if total_alerts > 0 %}
+                    <span class="badge bg-danger fs-5 px-3 py-2">
+                        {{ total_alerts }} alerte{{ total_alerts|pluralize }}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-success fs-5 px-3 py-2">
+                        Aucune alerte
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accordion Dashboard -->
+    <div class="accordion" id="dashboardAccordion">
+        
+        <!-- SECTION 1: STOCKS -->
+        <div class="accordion-item mb-3 border rounded shadow-sm">
+            <h2 class="accordion-header" id="stocksHeader">
+                <button class="accordion-button fw-bold fs-5" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#stocksCollapse" 
+                        aria-expanded="true" aria-controls="stocksCollapse">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Stocks
+                    <span class="badge bg-primary ms-2">
+                        {{ stock_alerts|length }} anomalie{{ stock_alerts|length|pluralize }}
+                    </span>
+                </button>
+            </h2>
+            <div id="stocksCollapse" class="accordion-collapse collapse show" 
+                 aria-labelledby="stocksHeader" data-bs-parent="#dashboardAccordion">
+                <div class="accordion-body">
+                    <div class="row g-3">
+                        
+                        <!-- Articles Manquants -->
+                        <div class="col-12 col-lg-4">
+                            <div class="card h-100 border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Articles Manquants
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if missing_items %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nom</th>
+                                                    <th>Catégorie</th>
+                                                    <th class="text-end">Manquant</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in missing_items %}
+                                                <tr>
+                                                    <td>{{ item.name }}</td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            {{ item.category.name }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="badge bg-danger">
+                                                            -{{ item.missing_quantity }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-check-circle fs-1"></i>
+                                        <p class="mb-0 mt-2">Aucun article manquant</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Articles chez Fournisseur -->
+                        <div class="col-12 col-lg-4">
+                            <div class="card h-100 border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-truck"></i>
+                                        Chez Fournisseur
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if items_at_supplier %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nom</th>
+                                                    <th>Fournisseur(s)</th>
+                                                    <th class="text-end">Quantité</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in items_at_supplier %}
+                                                <tr>
+                                                    <td>{{ item.name }}</td>
+                                                    <td>
+                                                        {% for supplier in item.suppliers.all|slice:":2" %}
+                                                        <small class="badge bg-info">
+                                                            {{ supplier.name }}
+                                                        </small>
+                                                        {% endfor %}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="badge bg-warning text-dark">
+                                                            {{ item.outside_quantity }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-1"></i>
+                                        <p class="mb-0 mt-2">Aucun article chez fournisseur</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Articles Excédentaires -->
+                        <div class="col-12 col-lg-4">
+                            <div class="card h-100 border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                        Articles Excédentaires
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if excess_items %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nom</th>
+                                                    <th>Catégorie</th>
+                                                    <th class="text-end">Excès</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in excess_items %}
+                                                <tr>
+                                                    <td>{{ item.name }}</td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            {{ item.category.name }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="badge bg-info">
+                                                            +{{ item.excess_quantity }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-check-circle fs-1"></i>
+                                        <p class="mb-0 mt-2">Aucun article excédentaire</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: ALERTES -->
+        <div class="accordion-item mb-3 border rounded shadow-sm">
+            <h2 class="accordion-header" id="alertsHeader">
+                <button class="accordion-button collapsed fw-bold fs-5" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#alertsCollapse" 
+                        aria-expanded="false" aria-controls="alertsCollapse">
+                    <i class="bi bi-bell me-2"></i>
+                    Alertes
+                    <span class="badge bg-danger ms-2">
+                        {{ alerts_count.total }} alerte{{ alerts_count.total|pluralize }}
+                    </span>
+                </button>
+            </h2>
+            <div id="alertsCollapse" class="accordion-collapse collapse" 
+                 aria-labelledby="alertsHeader" data-bs-parent="#dashboardAccordion">
+                <div class="accordion-body">
+                    
+                    <!-- Anomalies de Stock -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-box-seam-fill text-danger"></i>
+                            Anomalies de Stock
+                            <span class="badge bg-secondary">{{ stock_alerts|length }}</span>
+                        </h5>
+                        {% if stock_alerts %}
+                        <div class="list-group">
+                            {% for alert in stock_alerts %}
+                            <div class="list-group-item list-group-item-action 
+                                        {% if alert.severity == 'danger' %}border-danger{% else %}border-warning{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div>
+                                        {% if alert.type == 'deficit' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        {% else %}
+                                        <i class="bi bi-info-circle-fill text-warning"></i>
+                                        {% endif %}
+                                        <strong>{{ alert.item.name }}</strong>
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ alert.item.category.name }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        {% if alert.type == 'deficit' %}
+                                        <span class="badge bg-danger">
+                                            Manquant: {{ alert.quantity }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">
+                                            Excès: {{ alert.quantity }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ alert.message }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i>
+                            Aucune anomalie de stock détectée
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Anomalies de Commande -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-truck text-danger"></i>
+                            Anomalies de Commande
+                            <span class="badge bg-secondary">{{ order_alerts|length }}</span>
+                        </h5>
+                        {% if order_alerts %}
+                        <div class="list-group">
+                            {% for alert in order_alerts %}
+                            <div class="list-group-item list-group-item-action 
+                                        {% if alert.severity == 'danger' %}border-danger{% else %}border-warning{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div>
+                                        {% if alert.severity == 'danger' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        {% else %}
+                                        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                        {% endif %}
+                                        <strong>Commande #{{ alert.order.id }}</strong> - 
+                                        {{ alert.order.supplier.name }}
+                                    </div>
+                                    <div>
+                                        <span class="badge 
+                                            {% if alert.severity == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                            Retard: {{ alert.days_delayed }} jour{{ alert.days_delayed|pluralize }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    Retour attendu le {{ alert.order.expected_return_date|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i>
+                            Aucune commande en retard
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Anomalies de Contrat -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-person-x text-danger"></i>
+                            Alertes Contrats (Crew)
+                            <span class="badge bg-secondary">{{ contract_alerts|length }}</span>
+                        </h5>
+                        {% if contract_alerts %}
+                        <div class="list-group">
+                            {% for alert in contract_alerts %}
+                            <div class="list-group-item list-group-item-action 
+                                        {% if alert.severity == 'danger' %}border-danger{% else %}border-warning{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div>
+                                        {% if alert.severity == 'danger' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        {% else %}
+                                        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                        {% endif %}
+                                        <strong>{{ alert.user.username }}</strong>
+                                        <span class="badge bg-secondary ms-2">
+                                            {{ alert.user.get_role_display }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="badge 
+                                            {% if alert.severity == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                            {{ alert.days_remaining }} jour{{ alert.days_remaining|pluralize }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    Fin de contrat: {{ alert.user.date_end_contract|date:"d/m/Y" }}
+                                </small>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="alert('Fonctionnalité à venir')">
+                                        <i class="bi bi-calendar-plus"></i> Prolonger
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="alert('Fonctionnalité à venir')">
+                                        <i class="bi bi-check"></i> Confirmer fin
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i>
+                            Aucun contrat arrivant à expiration
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: STATUT COMMANDES -->
+        <div class="accordion-item mb-3 border rounded shadow-sm">
+            <h2 class="accordion-header" id="ordersHeader">
+                <button class="accordion-button collapsed fw-bold fs-5" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#ordersCollapse" 
+                        aria-expanded="false" aria-controls="ordersCollapse">
+                    <i class="bi bi-cart-check me-2"></i>
+                    Statut des Commandes
+                    <span class="badge bg-info ms-2">
+                        {{ outdated_orders|length|add:waited_orders|length }} commande{{ outdated_orders|length|add:waited_orders|length|pluralize }}
+                    </span>
+                </button>
+            </h2>
+            <div id="ordersCollapse" class="accordion-collapse collapse" 
+                 aria-labelledby="ordersHeader" data-bs-parent="#dashboardAccordion">
+                <div class="accordion-body">
+                    
+                    <!-- Tabs pour séparer commandes en retard et attendues -->
+                    <ul class="nav nav-tabs mb-3" id="ordersTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="outdated-tab" 
+                                    data-bs-toggle="tab" data-bs-target="#outdated" 
+                                    type="button" role="tab" aria-controls="outdated" 
+                                    aria-selected="true">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                En Retard
+                                <span class="badge bg-danger ms-1">{{ outdated_orders|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="waited-tab" 
+                                    data-bs-toggle="tab" data-bs-target="#waited" 
+                                    type="button" role="tab" aria-controls="waited" 
+                                    aria-selected="false">
+                                <i class="bi bi-clock"></i>
+                                En Attente
+                                <span class="badge bg-success ms-1">{{ waited_orders|length }}</span>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="ordersTabContent">
+                        
+                        <!-- Tab: Commandes en retard -->
+                        <div class="tab-pane fade show active" id="outdated" 
+                             role="tabpanel" aria-labelledby="outdated-tab">
+                            {% if outdated_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-danger">
+                                        <tr>
+                                            <th>#ID</th>
+                                            <th>Fournisseur</th>
+                                            <th>Articles</th>
+                                            <th>Date Retour Attendue</th>
+                                            <th>Retard</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in outdated_orders %}
+                                        <tr class="table-danger">
+                                            <td><strong>#{{ order.id }}</strong></td>
+                                            <td>{{ order.supplier.name }}</td>
+                                            <td>
+                                                <small>
+                                                    {% for order_item in order.order_items.all|slice:":3" %}
+                                                    <span class="badge bg-secondary">
+                                                        {{ order_item.item.name }} ({{ order_item.quantity }})
+                                                    </span>
+                                                    {% endfor %}
+                                                    {% if order.order_items.count > 3 %}
+                                                    <span class="badge bg-dark">+{{ order.order_items.count|add:"-3" }}</span>
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                            <td>{{ order.expected_return_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if order.days_delayed > 7 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                                    {{ order.days_delayed }} jour{{ order.days_delayed|pluralize }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-danger">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i>
+                                Aucune commande en retard
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tab: Commandes attendues -->
+                        <div class="tab-pane fade" id="waited" 
+                             role="tabpanel" aria-labelledby="waited-tab">
+                            {% if waited_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-success">
+                                        <tr>
+                                            <th>#ID</th>
+                                            <th>Fournisseur</th>
+                                            <th>Articles</th>
+                                            <th>Date Retour Attendue</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in waited_orders %}
+                                        <tr>
+                                            <td><strong>#{{ order.id }}</strong></td>
+                                            <td>{{ order.supplier.name }}</td>
+                                            <td>
+                                                <small>
+                                                    {% for order_item in order.order_items.all|slice:":3" %}
+                                                    <span class="badge bg-secondary">
+                                                        {{ order_item.item.name }} ({{ order_item.quantity }})
+                                                    </span>
+                                                    {% endfor %}
+                                                    {% if order.order_items.count > 3 %}
+                                                    <span class="badge bg-dark">+{{ order.order_items.count|add:"-3" }}</span>
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                            <td>{{ order.expected_return_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                Aucune commande en attente
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

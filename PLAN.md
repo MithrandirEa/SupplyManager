@@ -54,7 +54,7 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
 
 **Fichier**: `src/core/services.py` (nouveau fichier)
 
-- [ ] Créer une classe `DashboardService` avec les méthodes :
+- [x] Créer une classe `DashboardService` avec les méthodes :
   - `get_missing_items()` : retourne les items avec missing_quantity > 0
   - `get_excess_items()` : retourne les items avec excess_quantity > 0
   - `get_items_at_supplier()` : retourne les items avec outside_quantity > 0
@@ -94,21 +94,21 @@ Implémentation d'un dashboard centralisé pour la gestion des stocks, alertes e
 
 Structure HTML avec Bootstrap 5 :
 
-- [ ] Créer le layout de base :
+- [x] Créer le layout de base :
   ```html
   {% extends "base.html" %}
   ```
 
-- [ ] Section Header avec titre et actions rapides
+- [x] Section Header avec titre et actions rapides
 
-- [ ] Conteneur principal avec 3 sections rétractables (Accordion Bootstrap 5) :
+- [x] Conteneur principal avec 3 sections rétractables (Accordion Bootstrap 5) :
   1. **Section Stocks**
   2. **Section Alertes**
   3. **Section Statut Commandes**
 
 ### 3.2 Section 1 : Stocks (Accordion Item 1)
 
-- [ ] Créer des cards Bootstrap pour :
+- [x] Créer des cards Bootstrap pour :
   - **Articles manquants** :
     - Tableau avec colonnes : Nom, Catégorie, Quantité manquante, Action
     - Badge rouge si critique
@@ -117,12 +117,12 @@ Structure HTML avec Bootstrap 5 :
   - **Articles excédentaires** :
     - Tableau avec colonnes : Nom, Quantité excès, Suggestion
 
-- [ ] Ajouter des graphiques (optionnel, Phase bonus) :
+- [x] Ajouter des graphiques (optionnel, Phase bonus) :
   - Chart.js pour visualisation des stocks
 
 ### 3.3 Section 2 : Alertes (Accordion Item 2)
 
-- [ ] Créer un système d'alertes avec badges colorés :
+- [x] Créer un système d'alertes avec badges colorés :
   - **Anomalies Stock** :
     - Liste avec icônes (Bootstrap Icons)
     - Couleur : rouge (défaut), orange (excès)
@@ -136,7 +136,7 @@ Structure HTML avec Bootstrap 5 :
 
 ### 3.4 Section 3 : Statut Commandes (Accordion Item 3)
 
-- [ ] Créer deux sous-sections avec tabs Bootstrap :
+- [x] Créer deux sous-sections avec tabs Bootstrap :
   - **Tab "Commandes en retard"** (`outdated_orders`) :
     - Liste rouge avec détails : fournisseur, items, date attendue, retard
   - **Tab "Commandes attendues"** (`waited_orders`) :
@@ -146,9 +146,9 @@ Structure HTML avec Bootstrap 5 :
 
 **Fichier**: `src/core/templates/partials/`
 
-- [ ] `dashboard_stock_card.html` : card pour un item de stock
-- [ ] `dashboard_alert_item.html` : item d'alerte
-- [ ] `dashboard_order_row.html` : ligne de commande
+- [x] `dashboard_stock_card.html` : card pour un item de stock
+- [x] `dashboard_alert_item.html` : item d'alerte
+- [x] `dashboard_order_row.html` : ligne de commande
 
 ---
 

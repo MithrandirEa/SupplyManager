@@ -1,0 +1,75 @@
+<!-- Alert Item Partial - Affiche un élément d'alerte dans une liste -->
+{% load static %}
+
+<div class="list-group-item list-group-item-action 
+            {% if alert.severity == 'danger' %}border-danger{% else %}border-warning{% endif %}">
+    <div class="d-flex w-100 justify-content-between align-items-center">
+        <div>
+            {% if alert.severity == 'danger' %}
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+            {% else %}
+            <i class="bi bi-exclamation-circle-fill text-warning"></i>
+            {% endif %}
+            
+            {% if alert.type == 'deficit' or alert.type == 'excess' %}
+            <strong>{{ alert.item.name }}</strong>
+            <span class="badge bg-secondary ms-2">
+                {{ alert.item.category.name }}
+            </span>
+            {% elif alert.type == 'order_delay' %}
+            <strong>Commande #{{ alert.order.id }}</strong> - 
+            {{ alert.order.supplier.name }}
+            {% elif alert.type == 'contract_expiry' %}
+            <strong>{{ alert.user.username }}</strong>
+            <span class="badge bg-secondary ms-2">
+                {{ alert.user.get_role_display }}
+            </span>
+            {% endif %}
+        </div>
+        
+        <div>
+            {% if alert.type == 'deficit' %}
+            <span class="badge bg-danger">
+                Manquant: {{ alert.quantity }}
+            </span>
+            {% elif alert.type == 'excess' %}
+            <span class="badge bg-warning text-dark">
+                Excès: {{ alert.quantity }}
+            </span>
+            {% elif alert.type == 'order_delay' %}
+            <span class="badge 
+                {% if alert.severity == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                Retard: {{ alert.days_delayed }} jour{{ alert.days_delayed|pluralize }}
+            </span>
+            {% elif alert.type == 'contract_expiry' %}
+            <span class="badge 
+                {% if alert.severity == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                {{ alert.days_remaining }} jour{{ alert.days_remaining|pluralize }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <small class="text-muted d-block mt-1">
+        {{ alert.message }}
+        
+        {% if alert.type == 'order_delay' %}
+        <br>Retour attendu le {{ alert.order.expected_return_date|date:"d/m/Y" }}
+        {% elif alert.type == 'contract_expiry' %}
+        <br>Fin de contrat: {{ alert.user.date_end_contract|date:"d/m/Y" }}
+        {% endif %}
+    </small>
+    
+    {% if alert.type == 'contract_expiry' %}
+    <div class="mt-2">
+        <button class="btn btn-sm btn-outline-primary" 
+                onclick="alert('Fonctionnalité à venir')">
+            <i class="bi bi-calendar-plus"></i> Prolonger
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" 
+                onclick="alert('Fonctionnalité à venir')">
+            <i class="bi bi-check"></i> Confirmer fin
+        </button>
+    </div>
+    {% endif %}
+</div>
