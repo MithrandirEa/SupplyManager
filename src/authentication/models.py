@@ -67,6 +67,23 @@ class User(AbstractUser):
         verbose_name="Date fin contrat"
     )
 
+    class Meta:
+        verbose_name = "Utilisateur"
+        verbose_name_plural = "Utilisateurs"
+        indexes = [
+            models.Index(fields=['role'], name='user_role_idx'),
+            models.Index(fields=['still_active'], name='user_active_idx'),
+            models.Index(fields=['date_end_contract'], name='user_end_contract_idx'),
+            models.Index(
+                fields=['role', 'still_active'],
+                name='user_role_active_idx'
+            ),
+            models.Index(
+                fields=['role', 'date_end_contract'],
+                name='user_role_contract_idx'
+            ),
+        ]
+
     def save(self, *args, **kwargs):
         # Récupérer created_by depuis kwargs si fourni
         created_by_user = kwargs.pop('created_by_user', None)

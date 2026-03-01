@@ -74,6 +74,16 @@ class Order(models.Model):
         verbose_name = "Commande"
         verbose_name_plural = "Commandes"
         ordering = ['-order_date']
+        indexes = [
+            models.Index(fields=['expected_return_date'], name='order_exp_ret_idx'),
+            models.Index(fields=['status'], name='order_status_idx'),
+            models.Index(fields=['supplier', 'status'], name='order_sup_status_idx'),
+            models.Index(fields=['-order_date'], name='order_date_idx'),
+            models.Index(
+                fields=['status', 'expected_return_date'],
+                name='order_status_date_idx'
+            ),
+        ]
 
     def __str__(self):
         return (

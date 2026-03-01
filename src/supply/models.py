@@ -50,6 +50,19 @@ class Item(models.Model):
         help_text="Date du dernier inventaire"
     )
 
+    class Meta:
+        verbose_name = "Article"
+        verbose_name_plural = "Articles"
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['available_quantity'], name='item_avail_qty_idx'),
+            models.Index(fields=['outside_quantity'], name='item_out_qty_idx'),
+            models.Index(fields=['excess_quantity'], name='item_excess_qty_idx'),
+            models.Index(fields=['is_available'], name='item_is_avail_idx'),
+            models.Index(fields=['category', 'name'], name='item_cat_name_idx'),
+            models.Index(fields=['-created_at'], name='item_created_idx'),
+        ]
+
     @property
     def missing_quantity(self):
         """Calcule la quantité manquante.

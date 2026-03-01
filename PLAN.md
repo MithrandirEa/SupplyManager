@@ -158,16 +158,16 @@ Structure HTML avec Bootstrap 5 :
 
 **Fichier**: `src/static/css/dashboard.css` (nouveau fichier)
 
-- [ ] Styles pour les cards de dashboard :
+- [x] Styles pour les cards de dashboard :
   - Ombres et espacements
   - Couleurs des badges (success, warning, danger)
   - Animations de hover
 
-- [ ] Styles pour les alertes :
+- [x] Styles pour les alertes :
   - Icônes et couleurs cohérentes
   - Animation de pulsation pour alertes critiques
 
-- [ ] Responsive design :
+- [x] Responsive design :
   - Adaptation mobile (cards en colonne)
   - Tables scrollables sur mobile
 
@@ -175,7 +175,7 @@ Structure HTML avec Bootstrap 5 :
 
 **Fichier**: `src/static/js/dashboard.js` (nouveau fichier)
 
-- [ ] Fonctions pour :
+- [x] Fonctions pour :
   - Rafraîchissement automatique des données (AJAX)
   - Gestion des accordions (état ouvert/fermé dans localStorage)
   - Filtres et recherche dans les tableaux
@@ -183,33 +183,7 @@ Structure HTML avec Bootstrap 5 :
 
 ---
 
-## Phase 5 : URLs et Navigation
 
-### 5.1 Configuration des URLs
-
-**Fichier**: `src/core/urls.py` (ou créer si n'existe pas)
-
-- [ ] Ajouter la route :
-  ```python
-  path('dashboard/', views.DashboardView.as_view(), name='dashboard')
-  ```
-
-**Fichier**: `src/LaundryWatcher/urls.py`
-
-- [ ] Inclure les URLs de core :
-  ```python
-  path('', include('core.urls'))
-  ```
-
-### 5.2 Navigation
-
-**Fichier**: `src/LaundryWatcher/templates/base.html`
-
-- [ ] Ajouter le lien Dashboard dans la navbar :
-  - Visible uniquement pour Director et Admin
-  - Badge de notification pour alertes
-
----
 
 ## Phase 6 : Tests et Optimisation
 
