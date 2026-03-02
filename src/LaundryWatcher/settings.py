@@ -153,3 +153,16 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Email configuration
+# Pour le développement, on affiche les emails dans la console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Pour la production, décommentez et configurez les lignes suivantes :
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'votre_email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'votre_mot_de_passe_app'
+# DEFAULT_FROM_EMAIL = 'LaundryWatcher <noreply@laundrywatcher.com>'
+

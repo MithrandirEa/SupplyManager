@@ -26,18 +26,19 @@
                 <a href="#inventory" class="list-group-item list-group-item-action">Inventaire & Stocks</a>
                 <a href="#suppliers" class="list-group-item list-group-item-action">Fournisseurs & Commandes</a>
                 <a href="#users" class="list-group-item list-group-item-action">Gestion des Utilisateurs</a>
+                <a href="#import-export" class="list-group-item list-group-item-action">Import/Export</a>
                 <a href="#support" class="list-group-item list-group-item-action list-group-item-warning fw-bold">Contact Support</a>
             </div>
         </div>
 
         <!-- Contenu Principal -->
         <div class="col-md-9">
-            <h1 class="mb-4 display-5">Centre d'Aide LaundryWatcher</h1>
+            <h1 class="mb-4 display-5">Centre d'Aide SupplyManager</h1>
             
             <!-- Section Introduction -->
             <section id="intro" class="mb-5">
                 <h2>Introduction</h2>
-                <p class="lead">Bienvenue dans la documentation officielle de LaundryWatcher.</p>
+                <p class="lead">Bienvenue dans la documentation officielle de SupplyManager.</p>
                 <p>
                     Cette application a été conçue pour simplifier la gestion des stocks de linge, le suivi des fournisseurs et la coordination des commandes.
                     Elle permet une vue d'ensemble rapide de l'état des stocks et facilite les réapprovisionnements.
@@ -169,43 +170,133 @@
 
             <hr class="my-5">
 
+            <!-- Section Import/Export -->
+            <section id="import-export" class="mb-5">
+                <h3><i class="bi bi-file-earmark-spreadsheet"></i> Import / Export</h3>
+                <p>Pour faciliter la gestion de grandes quantités d'articles ou la migration de données, vous disposez d'un outil d'import/export compatible Excel et CSV.</p>
+                
+                <h5>Structure du Fichier d'Import</h5>
+                <p>Pour que l'import fonctionne, votre fichier doit respecter les colonnes suivantes (l'ordre n'est pas strict mais les noms doivent correspondre) :</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Colonne</th>
+                                <th>Obligatoire ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>Nom</code></td>
+                                <td class="text-success fw-bold">OUI</td>
+                                <td>Identifiant unique de l'article (ex: "Drap Housse 140")</td>
+                            </tr>
+                            <tr>
+                                <td><code>Catégorie</code></td>
+                                <td>Non</td>
+                                <td>Crée la catégorie si elle n'existe pas (ex: "Linge de lit")</td>
+                            </tr>
+                            <tr>
+                                <td><code>Total</code></td>
+                                <td>Non</td>
+                                <td>
+                                    Quantité totale possédée. Si vide, sera calculé : Disponible + Hors site.
+                                    <br><small class="text-muted">Prioritaire si renseigné.</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>Disponible</code></td>
+                                <td>Non</td>
+                                <td>Quantité stockée sur site. (Défaut : 0)</td>
+                            </tr>
+                            <tr>
+                                <td><code>Hors site</code></td>
+                                <td>Non</td>
+                                <td>Quantité chez le fournisseur. (Défaut : 0)</td>
+                            </tr>
+                            <tr>
+                                <td><code>Fournisseurs</code></td>
+                                <td>Non</td>
+                                <td>Noms des fournisseurs séparés par des virgules (ex: "Elis, Metro")</td>
+                            </tr>
+                            <tr>
+                                <td><code>Excédent</code></td>
+                                <td>Non</td>
+                                <td>Quantité excédentaire relevée.</td>
+                            </tr>
+                            <tr>
+                                <td><code>Informations</code></td>
+                                <td>Non</td>
+                                <td>Texte libre.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-light border">
+                    <i class="bi bi-lightbulb"></i> <strong>Astuce :</strong> La méthode la plus simple pour obtenir un modèle de fichier valide est de faire d'abord un <strong>Export Excel</strong> depuis l'onglet Matériels, de le vider, puis de le remplir.
+                </div>
+            </section>
+            
+            <hr class="my-5">
+
             <!-- Formulaire de Contact -->
             <section id="support" class="p-4 bg-light rounded border border-warning">
                 <h3 class="text-warning-emphasis"><i class="bi bi-envelope-exclamation"></i> Signaler un problème / Contact</h3>
                 <p>Vous rencontrez un bug ou vous avez une question qui n'est pas traitée dans cette documentation ? Utilisez le formulaire ci-dessous pour contacter le support technique directement.</p>
                 
-                <form method="post" action="{% url 'help' %}#support">
-                    {% csrf_token %}
+                <form id="contactForm" onsubmit="event.preventDefault(); sendSupportEmail();">
                     
                     <div class="mb-3">
                         <label for="{{ form.subject.id_for_label }}" class="form-label fw-bold">Sujet</label>
                         {{ form.subject }}
-                        {% if form.subject.errors %}
-                            <div class="text-danger small">{{ form.subject.errors }}</div>
-                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre Email</label>
                         {{ form.sender }}
-                        <div class="form-text">Nous utiliserons cet email pour vous répondre.</div>
-                        {% if form.sender.errors %}
-                            <div class="text-danger small">{{ form.sender.errors }}</div>
-                        {% endif %}
+                        <div class="form-text">Ce champ sera ajouté au corps du message.</div>
                     </div>
 
                     <div class="mb-3">
                         <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">Message</label>
                         {{ form.message }}
-                        {% if form.message.errors %}
-                            <div class="text-danger small">{{ form.message.errors }}</div>
-                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle"></i> Le bouton ci-dessous va préparer un email dans votre logiciel de messagerie habituel (Outlook, Mail, Gmail...).
                     </div>
 
                     <button type="submit" class="btn btn-warning w-100 fw-bold">
-                        <i class="bi bi-send"></i> Envoyer le message
+                        <i class="bi bi-envelope-at"></i> Ouvrir mon logiciel de messagerie
                     </button>
                 </form>
+
+                <script>
+                    function sendSupportEmail() {
+                        // Récupération des valeurs via les ID générés par Django (id_nomduchamp)
+                        const subjectInput = document.getElementById('id_subject');
+                        const senderInput = document.getElementById('id_sender');
+                        const messageInput = document.getElementById('id_message');
+
+                        const subject = subjectInput ? subjectInput.value : '';
+                        const sender = senderInput ? senderInput.value : '';
+                        const message = messageInput ? messageInput.value : '';
+                        
+                        if (!subject || !message) {
+                            alert("Merci de renseigner un sujet et un message.");
+                            return;
+                        }
+
+                        const recipient = 'clscipion@gmail.com';
+                        const finalSubject = encodeURIComponent(`[Support LW] ${subject}`);
+                        // On inclut l'expéditeur dans le corps du message car mailto l'utilise comme "From" (le client mail de l'utilisateur)
+                        const finalBody = encodeURIComponent(`De: ${sender}\n\nMessage:\n${message}`);
+
+                        window.location.href = `mailto:${recipient}?subject=${finalSubject}&body=${finalBody}`;
+                    }
+                </script>
             </section>
 
         </div>

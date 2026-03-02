@@ -101,6 +101,11 @@ urlpatterns = [
         supply.views.delete_item,
         name='delete_item'
     ),
+    path(
+        'import-items/',
+        supply.views.import_items,
+        name='import_items'
+    ),
 
     # Routes de gestion des fournisseurs
     path(

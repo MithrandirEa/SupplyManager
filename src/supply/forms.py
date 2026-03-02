@@ -122,3 +122,15 @@ class BuyItemForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'type': 'date'}
             ),
         }
+
+class ImportItemsForm(forms.Form):
+    import_file = forms.FileField(
+        label="Fichier d'import (CSV ou Excel)",
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv, .xlsx, .xls'})
+    )
+    update_existing = forms.BooleanField(
+        label="Mettre à jour les articles existants (basé sur le nom)",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )

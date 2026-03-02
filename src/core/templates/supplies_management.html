@@ -138,15 +138,25 @@
                 <a href="{% url 'create_item' %}" class="btn btn-success">Créer un nouvel item</a>
                 <a href="{% url 'create_category' %}" class="btn btn-outline-success">Créer une catégorie</a>
                 {% endif %}
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Exporter
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{% url 'export_items' %}?fmt=csv"><i class="bi bi-filetype-csv text-success me-1"></i>CSV / Google Sheets</a></li>
-                        <li><a class="dropdown-item" href="{% url 'export_items' %}?fmt=excel"><i class="bi bi-file-earmark-excel text-success me-1"></i>Excel (.xlsx)</a></li>
-                    </ul>
+                
+                <div class="btn-group">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download"></i> Exporter
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'export_items' %}?fmt=csv"><i class="bi bi-filetype-csv text-success me-1"></i>CSV / Google Sheets</a></li>
+                            <li><a class="dropdown-item" href="{% url 'export_items' %}?fmt=excel"><i class="bi bi-file-earmark-excel text-success me-1"></i>Excel (.xlsx)</a></li>
+                        </ul>
+                    </div>
                 </div>
+
+                {% if request.user|is_manager %}
+                <a href="{% url 'import_items' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-upload"></i> Importer
+                </a>
+                {% endif %}
+
             </div>
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">

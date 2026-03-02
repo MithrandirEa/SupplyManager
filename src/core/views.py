@@ -491,29 +491,8 @@ def help_view(request):
     """
     Vue pour la page d'aide et le formulaire de contact.
     """
-    if request.method == 'POST':
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            subject = form.cleaned_data['subject']
-            message_body = form.cleaned_data['message']
-            sender = form.cleaned_data['sender']
-            
-            full_message = f"Envoyé par: {sender}\n\nMessage:\n{message_body}"
-            
-            try:
-                send_mail(
-                    subject=f"[LaundryWatcher Support] {subject}",
-                    message=full_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@laundrywatcher.com',
-                    recipient_list=['clscipion@gmail.com'],
-                    fail_silently=False,
-                )
-                messages.success(request, "Votre message a bien été envoyé au support.")
-                return redirect('help')
-            except Exception as e:
-                messages.error(request, f"Erreur lors de l'envoi de l'email : {e}")
-    else:
-        form = ContactForm()
+    # On garde le formulaire pour l'affichage, mais le traitement se fait via mailto (client-side)
+    form = ContactForm()
     
     return render(request, 'help.html', {'form': form}) 
 
