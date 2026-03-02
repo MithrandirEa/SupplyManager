@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche d'inventaire</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: white;
+            font-size: 12px;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+            .container { max-width: 100%; width: 100%; padding: 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #000 !important; padding: 4px 8px; }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+        }
+        .write-box {
+            width: 100px;
+            height: 25px;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h1 class="h3">Fiche de relevé d'inventaire</h1>
+            <div>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Imprimer
+                </button>
+                <button onclick="window.close()" class="btn btn-secondary">Fermer</button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="row">
+                <div class="col-6"><strong>Date :</strong> __________________</div>
+                <div class="col-6 text-end"><strong>Effectué par :</strong> __________________</div>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40%">Article</th>
+                    {% if sort != 'category' %}
+                    <th style="width: 20%">Catégorie</th>
+                    {% endif %}
+                    <th style="width: 15%">Théorique (Site)</th>
+                    <th style="width: 15%">Théorique (Fourn.)</th>
+                    <th style="width: 25%">Stock réel (compté)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if sort == 'category' %}
+                    {% for cat_name, items_list in items_by_category.items %}
+                        <tr class="table-secondary">
+                            <td colspan="4" class="fw-bold text-uppercase">{{ cat_name }}</td>
+                        </tr>
+                        {% for item in items_list %}
+                        <tr>
+                            <td class="ps-4">{{ item.name }}</td>
+                            <td class="text-muted text-center">{{ item.available_quantity }}</td>
+                            <td class="text-muted text-center">{{ item.outside_quantity }}</td>
+                            <td></td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.category.name|default:"-" }}</td>
+                        <td class="text-muted text-center">{{ item.available_quantity }}</td>
+                        <td class="text-muted text-center">{{ item.outside_quantity }}</td>
+                        <td></td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Lancer l'impression automatiquement au chargement si voulu
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>
+

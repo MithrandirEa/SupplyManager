@@ -140,7 +140,7 @@ def receive_order(request, order_id):
         'order_items__item'
     ).get(id=order_id)
 
-    if order.status == 'completed':
+    if order.status in ['completed', 'partial']:
         messages.warning(request, 'Cette commande est déjà réceptionnée.')
         return redirect('supplies_management')
 
@@ -187,11 +187,21 @@ def receive_order(request, order_id):
             })
 
         # Appliquer les réceptions
+        backorder_items = []
         for oi, received, invoiced in receptions:
             remaining = oi.quantity - received
+            if remaining > 0:
+                backorder_items.append({
+                    'item': oi.item,
+                    'quantity': remaining
+                })
+            
             item = oi.item
 
             # Mettre à jour les stocks
+            # NOTE: On ne décrémente que ce qui a été reçu. 
+            # Le reste (reliquat) reste comptabilisé comme "chez le fournisseur" (outside_quantity)
+            # jusqu'à ce qu'il soit reçu via la nouvelle commande de reliquat.
             item.available_quantity += received
             item.outside_quantity = max(0, item.outside_quantity - received)
             item.save(update_fields=['available_quantity', 'outside_quantity'])
@@ -201,10 +211,46 @@ def receive_order(request, order_id):
             oi.invoiced_quantity = invoiced
             oi.save(update_fields=['received_quantity', 'invoiced_quantity'])
 
-        # Clôturer la commande
+        # Créer une commande reliquat si nécessaire
+        if backorder_items:
+            from datetime import timedelta
+            
+            original_date = order.order_date.strftime('%d/%m/%Y')
+            
+            # Message de reliquat standardisé
+            reliquat_msg = f"Reliquat commande #{order.id}"
+            
+            backorder = Order.objects.create(
+                supplier=order.supplier,
+                created_by=request.user,
+                order_date=timezone.now(),
+                expected_return_date=order.expected_return_date, # Garder la date originale ou +7 jours ? +7 semble logique pour un retard
+                status='pending',
+                notes=f"{reliquat_msg} du {original_date}",
+                # On utilise le champ notes pour stocker l'info, 
+                # mais l'utilisateur veut voir "En attente (reliquat...)" en statut.
+                # On va modifier l'affichage dans le template plutôt que de corrompre le champ status
+            )
+            
+            from supplier.models import OrderItem
+            for item_data in backorder_items:
+                OrderItem.objects.create(
+                    order=backorder,
+                    item=item_data['item'],
+                    quantity=item_data['quantity']
+                )
+            
+            messages.warning(
+                request, 
+                f"Une nouvelle commande (#{backorder.id}) a été créée pour les {len(backorder_items)} articles manquants."
+            )
 
         # Clôturer la commande
-        order.status = 'completed'
+        if backorder_items:
+            order.status = 'partial'
+        else:
+            order.status = 'completed'
+            
         order.actual_return_date = timezone.now().date()
         order.save(update_fields=['status', 'actual_return_date'])
 

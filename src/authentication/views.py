@@ -114,3 +114,25 @@ def delete_user(request, user_id):
 
     user.delete()
     return redirect('staff_management')
+
+
+@login_required
+def change_password(request):
+    """Permet à l'utilisateur connecté de modifier son mot de passe."""
+    from django.contrib.auth.forms import PasswordChangeForm
+    from django.contrib.auth import update_session_auth_hash
+    from django.contrib import messages
+
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important pour ne pas déconnecter l'utilisateur
+            messages.success(request, 'Votre mot de passe a été mis à jour avec succès!')
+            return redirect('staff_management')
+        else:
+            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'change_password.html', {'form': form})
+

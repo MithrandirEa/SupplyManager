@@ -34,4 +34,8 @@ urlpatterns = [
         views.extend_contract_ajax,
         name='extend_contract_ajax'
     ),
+    
+    # Impression fiche inventaire
+    path('print-inventory-sheet/', views.print_inventory_sheet, name='print_inventory_sheet'),
 ]
+

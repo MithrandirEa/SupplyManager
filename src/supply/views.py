@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from authentication.decorators import role_required
 from .forms import CreateItemForm, ChangeItemForm, CreateCategoryForm
+from django.urls import reverse
 
 from supply.models import Item
 from supplier.models import Supplier
@@ -13,7 +14,7 @@ def create_category(request):
         form = CreateCategoryForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('supplies_management')
+            return redirect(f"{reverse('supplies_management')}#items")
     else:
         form = CreateCategoryForm()
 
@@ -37,9 +38,10 @@ def create_item(request):
             if selected_suppliers:
                 new_item.suppliers.set(selected_suppliers)
 
-            return redirect('supplies_management')
+            return redirect(f"{reverse('supplies_management')}#items")
     else:
         form = CreateItemForm()
+
 
     all_suppliers = Supplier.objects.all().order_by('name')
     return render(request, 'create_item.html', {
@@ -65,7 +67,7 @@ def change_item(request, item_id):
             selected_suppliers = request.POST.getlist('suppliers')
             change_item.suppliers.set(selected_suppliers)
 
-            return redirect('supplies_management')
+            return redirect(f"{reverse('supplies_management')}#items")
     else:
         form = ChangeItemForm(instance=item)
 
@@ -84,4 +86,5 @@ def change_item(request, item_id):
 def delete_item(request, item_id):
     item = Item.objects.get(id=item_id)
     item.delete()
-    return redirect('supplies_management')
+    return redirect(f"{reverse('supplies_management')}#items")
+

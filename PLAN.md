@@ -227,7 +227,7 @@ Structure HTML avec Bootstrap 5 :
   - Modal Bootstrap pour création rapide
   - Formulaire simplifié
 
-- [ ] **Action : Enregistrer un inventaire** :
+- [ ] **Action : Saisir un inventaire** :
   - Modal pour mise à jour des quantités
   - Sauvegarde de `last_inventory_quantity`
 

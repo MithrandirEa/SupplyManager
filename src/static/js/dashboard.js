@@ -412,15 +412,18 @@
         document.getElementById('inventoryFormErrors').classList.add('d-none');
         document.getElementById('inventoryNotes').value = '';
 
+        // Reset toggle removed
+        
         const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
         modal.show();
 
         if (itemId) {
             // Attendre l'animation du modal puis scroller vers l'input de l'article
             document.getElementById('inventoryModal').addEventListener('shown.bs.modal', function onShown() {
-                const input = document.querySelector(
-                    `.inventory-qty-input[data-item-id="${itemId}"]`
-                );
+                // UPDATE: selector targets row, then finds input inside
+                const row = document.querySelector(`tr.inventory-row[data-item-id="${itemId}"]`);
+                const input = row ? row.querySelector('.inventory-qty-input') : null;
+
                 if (input) {
                     // Ouvrir le panneau accordéon parent s'il est fermé
                     const collapseEl = input.closest('.accordion-collapse');
@@ -647,25 +650,43 @@
     function initActionForms() {
         // Formulaire d'inventaire (bulk)
         const inventoryForm = document.getElementById('inventoryForm');
+        
+        // --- ANCIENNE LOGIQUE TOGGLE SUPPRIMÉE ---
+        // La gestion manuelle de la quantité fournisseur a été retirée.
+        // On garde uniquement la logique de soumission simple (Qté comptée uniquement).
+
         if (inventoryForm) {
             inventoryForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const errorDiv = document.getElementById('inventoryFormErrors');
+                errorDiv.classList.add('d-none');
 
                 // Collecter toutes les quantités comme JSON
                 const items = [];
-                document.querySelectorAll('.inventory-qty-input').forEach(input => {
-                    items.push({
-                        item_id: parseInt(input.dataset.itemId, 10),
-                        quantity: parseInt(input.value || '0', 10)
-                    });
+                // Toujours automatique pour outside_quantity
+                const isManualOutside = false; 
+
+                document.querySelectorAll('#inventoryModal tr.inventory-row').forEach(row => {
+                    const itemId = parseInt(row.dataset.itemId, 10);
+                    const qtyInput = row.querySelector('.inventory-qty-input');
+                    // Plus d'input outside
+
+                    const itemData = {
+                        item_id: itemId,
+                        quantity: parseInt(qtyInput ? qtyInput.value : 0, 10) || 0
+                    };
+                    
+                    // On n'envoie jamais outside_quantity, le backend utilisera la valeur actuelle
+                    
+                    items.push(itemData);
                 });
 
                 // Mettre à jour le champ caché
                 document.getElementById('inventoryItemsData').value = JSON.stringify(items);
 
                 const formData = new FormData(inventoryForm);
+
 
                 try {
                     const response = await fetch('/dashboard/update-inventory/', {

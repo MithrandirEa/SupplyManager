@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser, Group, UserManager as BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.conf import settings
@@ -14,6 +14,21 @@ class UsernameWithSpacesValidator(UnicodeUsernameValidator):
     )
 
 
+class UserManager(BaseUserManager):
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        # Force le rôle ADMIN pour les superusers
+        extra_fields.setdefault('role', 'ADMIN')
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(username, email, password, **extra_fields)
+
+
 class User(AbstractUser):
     """Modèle utilisateur unique avec gestion des rôles"""
 
@@ -25,6 +40,8 @@ class User(AbstractUser):
             'unique': "Un utilisateur avec ce nom existe déjà.",
         },
     )
+
+    objects = UserManager()
 
     ADMIN = 'ADMIN'
     DIRECTOR = 'DIRECTOR'

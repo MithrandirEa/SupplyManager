@@ -170,11 +170,26 @@ class QuickOrderForm(forms.ModelForm):
             # Créer les OrderItems
             items_data = self.cleaned_data.get('items', [])
             for item_data in items_data:
+                item = item_data['item']
+                quantity = item_data['quantity']
+                
                 OrderItem.objects.create(
                     order=order,
-                    item=item_data['item'],
-                    quantity=item_data['quantity']
+                    item=item,
+                    quantity=quantity
                 )
+                
+                # Mettre à jour les stocks : on déplace du "disponible" vers "fournisseur"
+                # outside_quantity augmente de la quantité envoyée
+                item.outside_quantity += quantity
+                
+                # available_quantity diminue d'autant
+                if item.available_quantity >= quantity:
+                    item.available_quantity -= quantity
+                else:
+                    item.available_quantity = 0
+                
+                item.save(update_fields=['outside_quantity', 'available_quantity'])
         
         return order
 
@@ -216,7 +231,7 @@ class ChangeOrderForm(forms.ModelForm):
         status = cleaned_data.get('status')
         
         # Si la commande est terminée, la date de retour réelle est obligatoire
-        if status == 'completed' and not actual_return_date:
+        if status in ['completed', 'partial'] and not actual_return_date:
             raise forms.ValidationError(
                 "La date de retour réelle est obligatoire pour une commande terminée."
             )

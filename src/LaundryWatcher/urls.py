@@ -44,6 +44,9 @@ urlpatterns = [
         core.views.extend_contract_ajax,
         name='extend_contract_ajax'
     ),
+    
+    # Page d'aide
+    path('help/', core.views.help_view, name='help'),
 
     # Routes de connexion/déconnexion
     path('', LoginView.as_view(
@@ -51,6 +54,12 @@ urlpatterns = [
         redirect_authenticated_user=True),
         name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    
+    path(
+        'change-password/', 
+        authentication.views.change_password, 
+        name='change_password'
+    ),
 
     # Routes de la barre de navigation
     path('staff/', core.views.staff_management, name='staff_management'),
@@ -142,4 +151,6 @@ urlpatterns = [
     path('export/inventories/<int:inventory_id>/', core.views.export_inventory, name='export_inventory'),
     path('export/monthly-stats/', core.views.export_monthly_stats, name='export_monthly_stats'),
 
+    # Impression fiche inventaire
+    path('print-inventory-sheet/', core.views.print_inventory_sheet, name='print_inventory_sheet'),
 ]

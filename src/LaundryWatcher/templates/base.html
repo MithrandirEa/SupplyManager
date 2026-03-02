@@ -47,9 +47,12 @@
                         <a class="nav-link" href="{% url 'dashboard' %}">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link" href="{% url 'staff_management' %}">Équipes</a>
                         <a class="nav-link" href="{% url 'supplies_management' %}">Matériels</a>
+                        <a class="nav-link" href="{% url 'staff_management' %}">Équipes</a>
                         <a class="nav-link" {% if request.resolver_match.url_name == 'suppliers-management' %}active fw-bold{%endif %} href="{% url 'suppliers_management' %}">Fournisseurs</a>
+                        <a class="nav-link" href="{% url 'help' %}">
+                            <i class="bi bi-question-circle"></i> Aide
+                        </a>
                         <button type="button" class="nav-link bg-transparent border-0" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#logoutModal" 
@@ -67,7 +70,7 @@
     </main>
     
     <footer>
-        <p>&copy; 2026 SupplyManager - Created by SCIPION Clément</p>
+        <p>&copy; 2026 SupplyManager - Developped by SCIPION Clément</p>
     </footer>
     
     {% if user.is_authenticated %}

@@ -34,6 +34,8 @@ class BulkInventoryForm(forms.Form):
             try:
                 item_id = int(entry['item_id'])
                 quantity = int(entry['quantity'])
+                # outside_quantity est optionnel : s'il n'est pas fourni, on prend 0 ou on traitera dans save()
+                outside_quantity = entry.get('outside_quantity')
             except (KeyError, ValueError, TypeError):
                 raise forms.ValidationError(
                     "Données d'article mal formées."
@@ -42,13 +44,25 @@ class BulkInventoryForm(forms.Form):
                 raise forms.ValidationError(
                     "La quantité ne peut pas être négative."
                 )
+            if outside_quantity is not None and int(outside_quantity) < 0:
+                raise forms.ValidationError(
+                    "La quantité fournisseur ne peut pas être négative."
+                )
             try:
                 item = Item.objects.get(pk=item_id)
             except Item.DoesNotExist:
                 raise forms.ValidationError(
                     f"Article introuvable (id={item_id})."
                 )
-            cleaned.append({'item': item, 'quantity': quantity})
+            
+            cleaned_item = {
+                'item': item, 
+                'quantity': quantity
+            }
+            if outside_quantity is not None:
+                cleaned_item['outside_quantity'] = int(outside_quantity)
+                
+            cleaned.append(cleaned_item)
         return cleaned
 
     def save(self, user=None):
@@ -56,9 +70,9 @@ class BulkInventoryForm(forms.Form):
 
         Logique :
         - counted_quantity = articles comptés sur site
-        - outside_quantity_snapshot = articles chez le fournisseur au moment de la saisie
-        - available_quantity mis à jour = counted_quantity
-        - total_quantity mis à jour = counted_quantity + outside_quantity_snapshot
+        - si outside_quantity fourni (mode manuel) : on l'utilise
+        - sinon (mode auto) : on prend la valeur actuelle de item.outside_quantity
+        - total mis à jour = counted + outside
         """
         entries = self.cleaned_data['items_data']
         notes = self.cleaned_data.get('notes', '')
@@ -71,7 +85,12 @@ class BulkInventoryForm(forms.Form):
         for entry in entries:
             item = entry['item']
             counted = entry['quantity']
-            outside = item.outside_quantity  # snapshot au moment de la saisie
+            
+            # Détermination de outside_quantity
+            if 'outside_quantity' in entry:
+                outside = entry['outside_quantity']
+            else:
+                outside = item.outside_quantity  # Mode auto : snapshot actuel
 
             InventoryEntry.objects.create(
                 inventory=inventory,
@@ -81,15 +100,25 @@ class BulkInventoryForm(forms.Form):
             )
             # Mise à jour des stocks
             item.available_quantity = counted
+            # On met à jour outside_quantity seulement si fourni (mode manuel)
+            # Sinon, en mode auto, on suppose qu'il n'a pas bougé (ou géré ailleurs)
+            if 'outside_quantity' in entry:
+                item.outside_quantity = outside
+                
             item.total_quantity = counted + outside
             item.last_inventory_quantity = counted
             item.last_inventory_date = now
-            item.save(update_fields=[
+            
+            update_fields = [
                 'available_quantity',
                 'total_quantity',
                 'last_inventory_quantity',
                 'last_inventory_date',
-            ])
+            ]
+            if 'outside_quantity' in entry:
+                update_fields.append('outside_quantity')
+                
+            item.save(update_fields=update_fields)
 
         return inventory
 
@@ -172,7 +201,7 @@ class ChangeInventoryForm(forms.Form):
 
 class InventoryUpdateForm(forms.Form):
     """
-    Formulaire pour enregistrer un inventaire (article unique — conservé pour compatibilité)
+    Formulaire pour Saisir un inventaire (article unique — conservé pour compatibilité)
     """
     item_id = forms.IntegerField(widget=forms.HiddenInput())
     last_inventory_quantity = forms.IntegerField(
@@ -249,3 +278,22 @@ class ContractExtensionForm(forms.Form):
         user.save()
         
         return user
+
+class ContactForm(forms.Form):
+    '''
+    Formulaire de contact pour l'aide et le support.
+    '''
+    subject = forms.CharField(
+        max_length=100,
+        label='Sujet',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bugg ou question...'})
+    )
+    sender = forms.EmailField(
+        label='Votre email',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'votre.email@example.com'})
+    )
+    message = forms.CharField(
+        label='Message',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'D�crivez votre probl�me ici...'})
+    )
+

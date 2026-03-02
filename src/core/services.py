@@ -108,15 +108,36 @@ class DashboardService:
         anomalies = []
         for order in orders:
             severity = 'danger' if order.days_delayed > 7 else 'warning'
+            message = f"Commande #{order.id} en retard de {order.days_delayed} jour(s)"
+            
+            # Si c'est un reliquat, on précise
+            if order.notes and "Reliquat" in order.notes:
+                message += " (Reliquat)"
+                
             anomalies.append({
                 'type': 'order_delay',
                 'severity': severity,
                 'order': order,
                 'days_delayed': order.days_delayed,
-                'message': (
-                    f"Commande #{order.id} en retard de "
-                    f"{order.days_delayed} jour(s)"
-                )
+                'message': message
+            })
+            
+        # Ajouter les reliquats en attente même s'ils ne sont pas en retard ?
+        # La demande "apparaitre comme une anomalie" pourrait signifier qu'on veut voir ces reliquats spécifiquement.
+        # Checkons les commandes "pending" qui sont des reliquats mais PAS en retard
+        backorders = Order.objects.filter(
+            status='pending',
+            notes__icontains='Reliquat',
+            expected_return_date__gte=date.today() # Pas encore en retard
+        )
+        
+        for bo in backorders:
+            anomalies.append({
+                'type': 'backorder_pending',
+                'severity': 'info', # Moins critique car pas en retard
+                'order': bo,
+                'days_delayed': 0,
+                'message': f"Reliquat en attente : Commande #{bo.id}"
             })
 
         return anomalies

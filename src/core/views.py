@@ -9,8 +9,10 @@ from django.views.decorators.http import require_http_methods
 from supplier.models import Supplier
 from supply.models import Item
 from .services import DashboardService
-from .forms import BulkInventoryForm, ChangeInventoryForm, ContractExtensionForm
+from .forms import BulkInventoryForm, ChangeInventoryForm, ContractExtensionForm, ContactForm
 from supplier.forms import QuickOrderForm
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 @login_required
@@ -105,9 +107,18 @@ def supplies_management(request):
     ).prefetch_related('entries__item__category').all()
     
     # Récupération de tous les items pour l'onglet Matériels
-    items = Item.objects.all().order_by('category__name', 'name')
+    # items = Item.objects.all().order_by('category__name', 'name')
+    # On va regrouper tous les items (dispo ou non) par catégorie pour l'affichage de l'onglet Matériels
+    all_items_by_cat = defaultdict(list)
+    all_items_qs = Item.objects.select_related('category').prefetch_related('suppliers').order_by('category__name', 'name')
+    for item in all_items_qs:
+        cat_name = item.category.name if item.category else "Sans catégorie"
+        all_items_by_cat[cat_name].append(item)
+    
+    # On trie les catégories par ordre alphabétique (sauf "Sans catégorie" qui pourrait être à la fin si on voulait peaufiner)
+    all_items_by_cat_sorted = dict(sorted(all_items_by_cat.items()))
 
-    # Groupement par catégorie pour le modal inventaire
+    # Groupement par catégorie pour le modal inventaire (seulement items disponibles)
     items_by_category = defaultdict(list)
     available_items = Item.objects.filter(
         is_available=True
@@ -117,17 +128,19 @@ def supplies_management(request):
         items_by_category[cat].append(item)
 
     # Compter les commandes non terminées
-    pending_orders_count = orders.exclude(status='completed').count()
+    pending_orders_count = orders.exclude(status__in=['completed', 'partial']).count()
 
     context = {
-        'items': items,
+        'items_by_category_all': all_items_by_cat_sorted, # Pour l'onglet Matériels
+        'items': all_items_qs, # Pour compatibilité si utilisé ailleurs (modals de suppression ?)
         'orders': orders,
         'inventories': inventories,
         'pending_orders_count': pending_orders_count,
-        'items_by_category': dict(items_by_category),
+        'items_by_category': dict(items_by_category), # Pour le modal inventaire
         'monthly_tables': monthly_tables,
-        'all_items_headers': all_items, # Liste des items pour les headers du tableau
+        'all_items_headers': all_items, 
     }
+
     return render(request, 'supplies_management.html', context)
 
 
@@ -139,6 +152,36 @@ def suppliers_management(request):
         'suppliers_management.html',
         {'suppliers': suppliers}
     )
+
+
+@login_required
+def print_inventory_sheet(request):
+    """
+    Vue pour afficher une fiche d'inventaire imprimable.
+    ?sort=alpha (par défaut) ou sort=category
+    """
+    from supply.models import Item
+    from collections import defaultdict
+
+    sort = request.GET.get('sort', 'alpha')
+    items = Item.objects.filter(is_available=True).select_related('category')
+
+    context = {'sort': sort}
+
+    if sort == 'category':
+        items = items.order_by('category__name', 'name')
+        items_by_cat = defaultdict(list)
+        for item in items:
+            cat = item.category.name if item.category else "Sans catégorie"
+            items_by_cat[cat].append(item)
+        # Trier les clés
+        context['items_by_category'] = dict(sorted(items_by_cat.items()))
+    else:
+        # alpha
+        items = items.order_by('name')
+        context['items'] = items
+
+    return render(request, 'inventory_sheet.html', context)
 
 
 @login_required
@@ -232,11 +275,13 @@ def create_order_ajax(request):
 
 
 @login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 @require_http_methods(["POST"])
 def update_inventory_ajax(request):
     """
-    Vue AJAX pour enregistrer un inventaire global (tous les articles).
+    Vue AJAX pour Saisir un inventaire global (tous les articles).
     """
+
     form = BulkInventoryForm(request.POST)
 
     if form.is_valid():
@@ -285,8 +330,10 @@ def extend_contract_ajax(request):
 
 
 @login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def change_inventory(request, inventory_id):
     """Vue pour modifier un inventaire existant."""
+
     from supply.models import Inventory, Item
     from collections import defaultdict
 
@@ -434,8 +481,39 @@ def export_monthly_stats(request):
     """Export du suivi mensuel."""
     from .exports import export_monthly_stats_csv, export_monthly_stats_excel
     fmt = request.GET.get('fmt', 'csv')
-    
+
     if fmt == 'excel':
         return export_monthly_stats_excel()
     return export_monthly_stats_csv()
+
+
+def help_view(request):
+    """
+    Vue pour la page d'aide et le formulaire de contact.
+    """
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            message_body = form.cleaned_data['message']
+            sender = form.cleaned_data['sender']
+            
+            full_message = f"Envoyé par: {sender}\n\nMessage:\n{message_body}"
+            
+            try:
+                send_mail(
+                    subject=f"[LaundryWatcher Support] {subject}",
+                    message=full_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@laundrywatcher.com',
+                    recipient_list=['clscipion@gmail.com'],
+                    fail_silently=False,
+                )
+                messages.success(request, "Votre message a bien été envoyé au support.")
+                return redirect('help')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'envoi de l'email : {e}")
+    else:
+        form = ContactForm()
+    
+    return render(request, 'help.html', {'form': form}) 
 

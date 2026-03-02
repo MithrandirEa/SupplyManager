@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load auth_extras %}
 
 {% block title %}Dashboard - SupplyManager{% endblock %}
 
@@ -54,12 +55,26 @@
                             <span class="badge bg-light text-dark ms-1">{{ pending_orders|length }}</span>
                             {% endif %}
                         </button>
+                        {% if request.user|is_manager %}
                         <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#inventoryModal">
-                            <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
+                            <i class="bi bi-clipboard-check"></i> Saisir un inventaire
                         </button>
+                        {% endif %}
+                        
+                        <div class="btn-group">
+                          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownPrintDashboard" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-printer"></i> Fiche inventaire
+                          </button>
+                          <ul class="dropdown-menu shadow" aria-labelledby="dropdownPrintDashboard">
+                            <li><h6 class="dropdown-header">Trier par :</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'print_inventory_sheet' %}?sort=category" target="_blank"><i class="bi bi-tags me-2"></i>Catégorie</a></li>
+                            <li><a class="dropdown-item" href="{% url 'print_inventory_sheet' %}?sort=alpha" target="_blank"><i class="bi bi-sort-alpha-down me-2"></i>Ordre alphabétique</a></li>
+                          </ul>
+                        </div>
+
                     </div>
                     <small class="text-muted d-block mt-2">
-                        Utilisez les boutons ci-dessus pour créer une commande, réceptionner ou enregistrer un inventaire.
+                        Utilisez les boutons ci-dessus pour créer une commande, réceptionner, saisir un inventaire ou imprimer une fiche d'inventaire.
                     </small>
                 </div>
             </div>
@@ -381,7 +396,12 @@
                     <i class="bi bi-cart-check me-2"></i>
                     Statut des Commandes
                     <span class="badge bg-info ms-2">
-                        {{ outdated_orders|length|add:waited_orders|length }} commande{{ outdated_orders|length|add:waited_orders|length|pluralize }}
+                        {{ pending_orders|length }} commande{{ pending_orders|length|pluralize }}
+                        {% if pending_orders %}
+                        <span class="fw-normal bg-light text-dark rounded px-1 ms-1" style="font-size: 0.8em;">
+                            {{ outdated_orders|length }} retard + {{ waited_orders|length }} attente
+                        </span>
+                        {% endif %}
                     </span>
                 </button>
             </h2>
@@ -457,7 +477,11 @@
                                             </td>
                                             <td>
                                                 <span class="badge bg-danger">
-                                                    {{ order.get_status_display }}
+                                                    {% if "Reliquat" in order.notes %}
+                                                        En attente ({{ order.notes }})
+                                                    {% else %}
+                                                        {{ order.get_status_display }}
+                                                    {% endif %}
                                                 </span>
                                             </td>
                                         </tr>
@@ -508,7 +532,11 @@
                                             <td>{{ order.expected_return_date|date:"d/m/Y" }}</td>
                                             <td>
                                                 <span class="badge bg-success">
-                                                    {{ order.get_status_display }}
+                                                    {% if "Reliquat" in order.notes %}
+                                                        En attente ({{ order.notes }})
+                                                    {% else %}
+                                                        {{ order.get_status_display }}
+                                                    {% endif %}
                                                 </span>
                                             </td>
                                         </tr>
@@ -658,29 +686,30 @@
         </div>
     </div>
 
-    <!-- Modal : Enregistrer un inventaire -->
+    <!-- Modal : Saisir un inventaire -->
     <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="inventoryModalLabel">
-                        <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
+                        <i class="bi bi-clipboard-check"></i> Saisir un inventaire
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="inventoryForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
-                    <div class="modal-body">
-                        <div class="alert alert-light border mb-3">
-                            <i class="bi bi-info-circle"></i>
-                            Saisissez la quantité <strong>comptée sur site</strong> pour chaque article.
-                            Le stock disponible sera mis à jour et le total recalculé
-                            en ajoutant automatiquement la quantité chez le fournisseur.
-                            La date de saisie est enregistrée automatiquement.
-                        </div>
+                <div class="modal-body p-0">
+                    <form id="inventoryForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
+                        <div class="p-3">
+                            <div class="alert alert-light border mb-3">
+                                <i class="bi bi-info-circle"></i>
+                                <span id="inventoryInfoText">
+                                    Saisissez la quantité <strong>comptée sur site</strong>.
+                                    La quantité chez le fournisseur est récupérée automatiquement.
+                                </span>
+                            </div>
 
-                        <!-- Accordion par catégorie -->
+                            <!-- Accordion par catégorie -->
                         <div class="accordion" id="inventoryAccordion">
                             {% for category_name, cat_items in items_by_category.items %}
                             {% with forloop.counter as cat_idx %}
@@ -712,23 +741,17 @@
                                             </thead>
                                             <tbody>
                                                 {% for item in cat_items %}
-                                                <tr>
+                                                <tr class="inventory-row" data-item-id="{{ item.id }}">
                                                     <td>{{ item.name }}</td>
                                                     <td class="text-center">
                                                         <span class="badge bg-secondary">{{ item.available_quantity }}</span>
                                                     </td>
                                                     <td class="text-center">
-                                                        {% if item.outside_quantity > 0 %}
-                                                        <span class="badge bg-warning text-dark">{{ item.outside_quantity }}</span>
-                                                        {% else %}
-                                                        <span class="text-muted">—</span>
-                                                        {% endif %}
+                                                       <span class="badge bg-light text-dark border">{{ item.outside_quantity }}</span>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="number"
                                                                class="form-control form-control-sm inventory-qty-input"
-                                                               data-item-id="{{ item.id }}"
-                                                               data-item-name="{{ item.name }}"
                                                                value="{{ item.available_quantity }}"
                                                                min="0"
                                                                style="width:90px; display:inline-block;">
@@ -752,14 +775,15 @@
                         </div>
 
                         <div id="inventoryFormErrors" class="alert alert-danger d-none mt-3"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Enregistrer l'inventaire
-                        </button>
-                    </div>
-                </form>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="inventoryForm" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Enregistrer l'inventaire
+                    </button>
+                </div>
             </div>
         </div>
     </div>

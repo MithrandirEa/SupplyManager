@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Aide & Documentation{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Permet de compenser la hauteur de la navbar sticky lors du scroll vers une ancre */
+    section {
+        scroll-margin-top: 100px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar de Navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="list-group sticky-top" style="top: 100px;">
+                <a href="#intro" class="list-group-item list-group-item-action fw-bold active" aria-current="true">
+                    Introduction
+                </a>
+                <a href="#first-use" class="list-group-item list-group-item-action fw-bold list-group-item-success">Première Utilisation</a>
+                <a href="#dashboard" class="list-group-item list-group-item-action">Dashboard</a>
+                <a href="#inventory" class="list-group-item list-group-item-action">Inventaire & Stocks</a>
+                <a href="#suppliers" class="list-group-item list-group-item-action">Fournisseurs & Commandes</a>
+                <a href="#users" class="list-group-item list-group-item-action">Gestion des Utilisateurs</a>
+                <a href="#support" class="list-group-item list-group-item-action list-group-item-warning fw-bold">Contact Support</a>
+            </div>
+        </div>
+
+        <!-- Contenu Principal -->
+        <div class="col-md-9">
+            <h1 class="mb-4 display-5">Centre d'Aide LaundryWatcher</h1>
+            
+            <!-- Section Introduction -->
+            <section id="intro" class="mb-5">
+                <h2>Introduction</h2>
+                <p class="lead">Bienvenue dans la documentation officielle de LaundryWatcher.</p>
+                <p>
+                    Cette application a été conçue pour simplifier la gestion des stocks de linge, le suivi des fournisseurs et la coordination des commandes.
+                    Elle permet une vue d'ensemble rapide de l'état des stocks et facilite les réapprovisionnements.
+                </p>
+            </section>
+
+            <hr class="my-5">
+
+            <!-- Section Première Utilisation -->
+            <section id="first-use" class="mb-5">
+                <h3><i class="bi bi-rocket-takeoff"></i> Première Utilisation</h3>
+                <p>Pour bien démarrer avec l'application, suivez ces étapes initiales dans cet ordre précis afin d'initialiser correctement vos stocks totaux :</p>
+                
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white fw-bold">Étape 1 : Saisir les commandes en cours (Extérieur)</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Avant de compter ce que vous avez dans vos placards, il est crucial de renseigner ce qui est actuellement <strong>chez le fournisseur</strong> (blanchisserie).
+                        </p>
+                        <ul>
+                            <li>Allez dans le menu <strong>Fournisseurs</strong> ou utilisez l'action rapide "Nouvelle Commande" du Dashboard.</li>
+                            <li>Créez des commandes pour tout le linge qui est parti mais pas encore revenu.</li>
+                            <li><strong>Pourquoi ?</strong> Cela va peupler la colonne "Extérieur" de vos stocks pour que le calcul du total soit juste.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white fw-bold">Étape 2 : Saisir l'inventaire physique (Disponible)</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Une fois les quantités extérieures définies à l'étape 1, vous devez compter ce qui est physiquement présent.
+                        </p>
+                        <ul>
+                            <li>Allez sur le Dashboard, bouton <strong>"Mettre à jour l'inventaire"</strong>.</li>
+                            <li>Comptez et saisissez les quantités réelles présentes dans vos locaux (propres et sales, tant que c'est sur site).</li>
+                            <li>Le système calculera alors automatiquement votre <strong>Quantité Totale de référence</strong> (Stock Disponible + Stock Extérieur).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-secondary">
+                    <div class="card-header bg-secondary text-white fw-bold">Étape 3 : Créer les comptes utilisateurs</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Maintenant que les données sont initialisées, invitez vos collaborateurs.
+                        </p>
+                        <ul>
+                            <li>Allez dans le menu <strong>"Équipes"</strong> via la barre de navigation.</li>
+                            <li>Cliquez sur "Ajouter un membre".</li>
+                            <li>Créez un compte pour chaque membre du personnel. Attribuez le rôle approprié (Staff pour la saisie simple, Manager pour la gestion complète).</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="my-5">
+
+            <!-- Section Dashboard -->
+            <section id="dashboard" class="mb-5">
+                <h3><i class="bi bi-speedometer2"></i> Le Dashboard</h3>
+                <p>Le tableau de bord est votre point d'entrée principal. Il vous offre une vue synthétique des indicateurs clés :</p>
+                <ul>
+                    <li><strong>Articles en alerte :</strong> Liste des articles dont le stock disponible est critique.</li>
+                    <li><strong>Commandes en cours :</strong> Suivi des commandes envoyées aux fournisseurs mais non encore réceptionnées.</li>
+                    <li><strong>Commandes en retard :</strong> Alertes sur les commandes dont la date de retour prévue est dépassée.</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Astuce :</strong> Utilisez les boutons d'actions rapides pour créer une commande ou mettre à jour un inventaire sans changer de page.
+                </div>
+            </section>
+
+            <!-- Section Inventaire -->
+            <section id="inventory" class="mb-5">
+                <h3><i class="bi bi-box-seam"></i> Gestion des Stocks (Inventaire)</h3>
+                <p>La gestion des stocks repose sur un principe simple. Chaque article possède :</p>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Type de Quantité</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Quantité Totale</strong></td>
+                            <td>La somme de tout ce que l'établissement possède.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Disponible</strong></td>
+                            <td>Ce qui est physiquement présent dans vos locaux, prêt à être utilisé.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Extérieur (Chez le fournisseur)</strong></td>
+                            <td>La quantité envoyée en blanchisserie ou en commande.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Le système calcule automatiquement : <code>Total = Disponible + Extérieur</code>.</p>
+                <p>
+                    Lorsque vous effectuez un <strong>Inventaire</strong>, vous comptez ce qui est physiquement présent. 
+                    Si le total théorique ne correspond pas à la réalité, le système calculera automatiquement les pertes ou les excédents.
+                </p>
+            </section>
+
+            <!-- Section Fournisseurs -->
+            <section id="suppliers" class="mb-5">
+                <h3><i class="bi bi-truck"></i> Fournisseurs & Commandes</h3>
+                <p>Cette section permet de gérer vos interactions avec les blanchisseries et fournisseurs de matériel.</p>
+                
+                <h4>Cycle de vie d'une commande :</h4>
+                <ol>
+                    <li><strong>Création :</strong> Sélectionnez un fournisseur et ajoutez des articles. Définissez une date de retour prévue.</li>
+                    <li><strong>En attente (Pending) :</strong> La commande est partie. Les articles sont déplacés du stock "Disponible" vers le stock "Extérieur".</li>
+                    <li><strong>Réception :</strong> À la réception, indiquez les quantités reçues. Les articles reviennent dans le stock "Disponible". la commande passe en statut "Terminée".</li>
+                </ol>
+            </section>
+            
+            <!-- Section Utilisateurs -->
+            <section id="users" class="mb-5">
+                <h3><i class="bi bi-people"></i> Gestion des Utilisateurs</h3>
+                <p>L'application distingue plusieurs rôles :</p>
+                <ul>
+                    <li><strong>Staff :</strong> Peut consulter les stocks et effectuer des inventaires.</li>
+                    <li><strong>Manager :</strong> A accès à toutes les fonctionnalités, y compris la création de commandes et la gestion des utilisateurs.</li>
+                    <li><strong>Admin :</strong> Accès complet à la configuration technique.</li>
+                </ul>
+            </section>
+
+            <hr class="my-5">
+
+            <!-- Formulaire de Contact -->
+            <section id="support" class="p-4 bg-light rounded border border-warning">
+                <h3 class="text-warning-emphasis"><i class="bi bi-envelope-exclamation"></i> Signaler un problème / Contact</h3>
+                <p>Vous rencontrez un bug ou vous avez une question qui n'est pas traitée dans cette documentation ? Utilisez le formulaire ci-dessous pour contacter le support technique directement.</p>
+                
+                <form method="post" action="{% url 'help' %}#support">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.subject.id_for_label }}" class="form-label fw-bold">Sujet</label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                            <div class="text-danger small">{{ form.subject.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre Email</label>
+                        {{ form.sender }}
+                        <div class="form-text">Nous utiliserons cet email pour vous répondre.</div>
+                        {% if form.sender.errors %}
+                            <div class="text-danger small">{{ form.sender.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">Message</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger small">{{ form.message.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">
+                        <i class="bi bi-send"></i> Envoyer le message
+                    </button>
+                </form>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Petit script pour activer la classe 'active' sur le menu au scroll
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.list-group-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

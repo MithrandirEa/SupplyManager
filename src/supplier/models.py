@@ -29,6 +29,7 @@ class Order(models.Model):
         ('pending', 'En attente'),
         ('delayed', 'En retard'),
         ('completed', 'Terminée'),
+        ('partial', 'Terminée/partielle'),
     ]
     
     supplier = models.ForeignKey(
@@ -94,7 +95,7 @@ class Order(models.Model):
     @property
     def is_delayed(self):
         """Vérifie si la commande est en retard"""
-        if self.status == 'completed':
+        if self.status in ['completed', 'partial']:
             return False
         return date.today() > self.expected_return_date
 
@@ -107,7 +108,7 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         """Met à jour automatiquement le statut en fonction de la date"""
-        if self.status != 'completed':
+        if self.status not in ['completed', 'partial']:
             if self.is_delayed:
                 self.status = 'delayed'
             else:

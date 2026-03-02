@@ -65,12 +65,19 @@
                                         onclick="event.stopPropagation();">
                                     Supprimer
                                 </button>
+                                {% else %}
+                                <a href="{% url 'change_password' %}" class="btn btn-sm btn-warning">Changer mot de passe</a>
                                 {% endif %}
                             {% endif %}
                         {% else %}
-                             <span class="text-muted small">Lecture seule</span>
+                            {% if user.id == request.user.id %}
+                                <a href="{% url 'change_password' %}" class="btn btn-sm btn-warning">Changer mot de passe</a>
+                            {% else %}
+                                <span class="text-muted small">Lecture seule</span>
+                            {% endif %}
                         {% endif %}
                     </td>
+
                 </tr>
                 {% endfor %}
             </tbody>

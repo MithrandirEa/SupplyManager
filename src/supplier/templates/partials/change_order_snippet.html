@@ -29,6 +29,8 @@
                             <span class="badge bg-warning">{{ order.get_status_display }}</span>
                         {% elif order.status == 'delayed' %}
                             <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                        {% elif order.status == 'partial' %}
+                            <span class="badge bg-info text-dark">{{ order.get_status_display }}</span>
                         {% else %}
                             <span class="badge bg-success">{{ order.get_status_display }}</span>
                         {% endif %}

@@ -153,7 +153,6 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Nom de l'item</th>
-                            <th>Catégorie</th>
                             <th>Quantité totale</th>
                             <th>Quantité hors site</th>
                             <th>Quantité disponible</th>
@@ -161,11 +160,24 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for item in items %}
+                    {% for category_name, items_list in items_by_category_all.items %}
+                    <tbody class="border-0" 
+                           data-bs-toggle="collapse" 
+                           data-bs-target="#cat-{{ forloop.counter }}" 
+                           aria-expanded="true" 
+                           aria-controls="cat-{{ forloop.counter }}"
+                           role="button">
+                        <tr class="table-secondary">
+                            <td colspan="6" class="fw-bold text-center user-select-none">
+                                <i class="bi bi-chevron-down me-2 transition-icon"></i>{{ category_name|upper }}
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody id="cat-{{ forloop.counter }}" class="collapse show">
+                        {% for item in items_list %}
+
                         <tr class="clickable-row" style="cursor: pointer;" data-modal-id="itemDetailModal{{ item.id }}">
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.category.name }}</td>
+                            <td class="ps-4">{{ item.name }}</td>
                             <td>{{ item.total_quantity }}</td>
                             <td>{{ item.outside_quantity }}</td>
                             <td>{{ item.available_quantity }}</td>
@@ -191,6 +203,7 @@
                         </tr>
                         {% endfor %}
                     </tbody>
+                    {% endfor %}
                 </table>
             </div>
         </div>
@@ -247,9 +260,17 @@
                             </td>
                             <td>
                                 {% if order.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                                    <span class="badge bg-warning text-dark">
+                                        {% if "Reliquat" in order.notes %}
+                                            En attente ({{ order.notes }})
+                                        {% else %}
+                                            {{ order.get_status_display }}
+                                        {% endif %}
+                                    </span>
                                 {% elif order.status == 'delayed' %}
                                     <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'partial' %}
+                                    <span class="badge bg-info text-dark">{{ order.get_status_display }}</span>
                                 {% else %}
                                     <span class="badge bg-success">{{ order.get_status_display }}</span>
                                 {% endif %}
@@ -271,7 +292,7 @@
                                 </div>
                             </td>
                             <td>
-                                {% if order.status != 'completed' %}
+                                {% if order.status != 'completed' and order.status != 'partial' %}
                                 <a href="{% url 'receive_order' order_id=order.id %}" class="btn btn-sm btn-success">
                                     <i class="bi bi-box-arrow-in-down"></i> Réceptionner
                                 </a>
@@ -301,15 +322,27 @@
         <!-- Onglet Inventaires -->
         <div class="tab-pane fade" id="inventories" role="tabpanel" aria-labelledby="inventories-tab">
             <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-                {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+                {% if request.user|is_manager %}
                 <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#inventoryModal">
                     <i class="bi bi-clipboard-check"></i> Saisir un inventaire
                 </button>
                 {% endif %}
                 <div class="dropdown">
+
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownPrintInventory" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-printer"></i> Imprimer fiche
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownPrintInventory">
+                        <li><a class="dropdown-item" href="{% url 'print_inventory_sheet' %}?sort=category" target="_blank"><i class="bi bi-tags me-2"></i>Par catégorie</a></li>
+                        <li><a class="dropdown-item" href="{% url 'print_inventory_sheet' %}?sort=alpha" target="_blank"><i class="bi bi-sort-alpha-down me-2"></i>Ordre alphabétique</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-download"></i> Exporter la liste
                     </button>
+
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'export_inventories' %}?fmt=csv&scope=list"><i class="bi bi-filetype-csv text-success me-1"></i>CSV / Google Sheets</a></li>
                         <li><a class="dropdown-item" href="{% url 'export_inventories' %}?fmt=excel&scope=list"><i class="bi bi-file-earmark-excel text-success me-1"></i>Excel (.xlsx)</a></li>
@@ -413,7 +446,7 @@
                                 <tr>
                                     <th>Article</th>
                                     <th class="text-center">Commandé</th>
-                                    {% if order.status == 'completed' %}
+                                    {% if order.status == 'completed' or order.status == 'partial' %}
                                     <th class="text-center">Reçu</th>
                                     <th class="text-center">Resté fournisseur</th>
                                     {% endif %}
@@ -424,7 +457,7 @@
                                 <tr>
                                     <td>{{ order_item.item.name }}</td>
                                     <td class="text-center">{{ order_item.quantity }}</td>
-                                    {% if order.status == 'completed' %}
+                                    {% if order.status == 'completed' or order.status == 'partial' %}
                                     <td class="text-center">
                                         {% if order_item.received_quantity is not None %}
                                         <span class="badge bg-success">{{ order_item.received_quantity }}</span>
@@ -546,21 +579,24 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="inventoryModalLabel">
-                    <i class="bi bi-clipboard-check"></i> Enregistrer un inventaire
+                    <i class="bi bi-clipboard-check"></i> Saisir un inventaire
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="inventoryForm">
-                {% csrf_token %}
-                <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
-                <div class="modal-body">
-                    <div class="alert alert-light border mb-3">
-                        <i class="bi bi-info-circle"></i>
-                        Saisissez la quantité <strong>comptée sur site</strong> pour chaque article.
-                        Le stock disponible sera mis à jour et le total recalculé
-                        en ajoutant automatiquement la quantité chez le fournisseur.
-                    </div>
-                    <!-- Accordion par catégorie -->
+            <div class="modal-body p-0">
+                <form id="inventoryForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
+                    <div class="p-3">
+                        <div class="alert alert-light border mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            <span id="inventoryInfoText">
+                                Saisissez la quantité <strong>comptée sur site</strong>.
+                                La quantité chez le fournisseur est récupérée automatiquement.
+                            </span>
+                        </div>
+                        
+                        <!-- Accordion par catégorie -->
                     <div class="accordion" id="inventoryAccordion">
                         {% for category_name, cat_items in items_by_category.items %}
                         {% with forloop.counter as cat_idx %}
@@ -592,22 +628,17 @@
                                         </thead>
                                         <tbody>
                                             {% for item in cat_items %}
-                                            <tr>
+                                            <tr class="inventory-row" data-item-id="{{ item.id }}">
                                                 <td>{{ item.name }}</td>
                                                 <td class="text-center">
                                                     <span class="badge bg-secondary">{{ item.available_quantity }}</span>
                                                 </td>
                                                 <td class="text-center">
-                                                    {% if item.outside_quantity > 0 %}
-                                                    <span class="badge bg-warning text-dark">{{ item.outside_quantity }}</span>
-                                                    {% else %}
-                                                    <span class="text-muted">—</span>
-                                                    {% endif %}
+                                                    <span class="badge bg-light text-dark border">{{ item.outside_quantity }}</span>
                                                 </td>
                                                 <td class="text-center">
                                                     <input type="number"
                                                            class="form-control form-control-sm inventory-qty-input"
-                                                           data-item-id="{{ item.id }}"
                                                            value="{{ item.available_quantity }}"
                                                            min="0"
                                                            style="width:90px; display:inline-block;">
@@ -630,13 +661,14 @@
                     </div>
                     <div id="inventoryFormErrors" class="alert alert-danger d-none mt-3"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Enregistrer l'inventaire
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="inventoryForm" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Enregistrer l'inventaire
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -646,7 +678,28 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des onglets avec persistance via localStorage
+    // Restaurer l'onglet actif au chargement
+    const activeTabId = localStorage.getItem('activeSuppliesTab');
+    if (activeTabId) {
+        const triggerEl = document.querySelector(`#myTab button[data-bs-target="${activeTabId}"]`);
+        if (triggerEl) {
+            const tab = new bootstrap.Tab(triggerEl);
+            tab.show();
+        }
+    }
+
+    // Sauvegarder l'onglet actif lors du clic
+    const tabList = document.querySelectorAll('#myTab button[data-bs-toggle="tab"]');
+    tabList.forEach(triggerEl => {
+        triggerEl.addEventListener('shown.bs.tab', event => {
+            const targetId = event.target.getAttribute('data-bs-target');
+            localStorage.setItem('activeSuppliesTab', targetId);
+        });
+    });
+
     // Dropdowns dans table-responsive : utilise position:fixed pour éviter le clipping overflow
+
     document.querySelectorAll('.table-responsive .dropdown-toggle').forEach(function(el) {
         const existing = bootstrap.Dropdown.getInstance(el);
         if (existing) existing.dispose();
@@ -675,13 +728,19 @@ document.addEventListener('DOMContentLoaded', function() {
         inventoryForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const errorDiv = document.getElementById('inventoryFormErrors');
-
+            errorDiv.classList.add('d-none');
+            
             // Collecter toutes les quantités
             const items = [];
-            document.querySelectorAll('.inventory-qty-input').forEach(input => {
+            document.querySelectorAll('#inventoryModal tr.inventory-row').forEach(row => {
+                const itemId = parseInt(row.dataset.itemId, 10);
+                const qtyInput = row.querySelector('.inventory-qty-input');
+                const outsideInput = row.querySelector('.inventory-outside-input');
+                
                 items.push({
-                    item_id: parseInt(input.dataset.itemId, 10),
-                    quantity: parseInt(input.value || '0', 10)
+                    item_id: itemId,
+                    quantity: parseInt(qtyInput ? qtyInput.value : 0, 10) || 0,
+                    outside_quantity: parseInt(outsideInput ? outsideInput.value : 0, 10) || 0
                 });
             });
             document.getElementById('inventoryItemsData').value = JSON.stringify(items);
