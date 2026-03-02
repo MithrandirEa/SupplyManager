@@ -27,6 +27,13 @@
 
     <form method="post" id="changeInventoryForm" novalidate>
         {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger mx-3 mt-3">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
         <input type="hidden" id="inventoryItemsData" name="items_data" value="[]">
 
         <div class="card shadow-sm mb-4">

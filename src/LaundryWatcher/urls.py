@@ -140,5 +140,6 @@ urlpatterns = [
     path('export/orders/<int:order_id>/', core.views.export_order, name='export_order'),
     path('export/inventories/', core.views.export_inventories, name='export_inventories'),
     path('export/inventories/<int:inventory_id>/', core.views.export_inventory, name='export_inventory'),
+    path('export/monthly-stats/', core.views.export_monthly_stats, name='export_monthly_stats'),
 
 ]

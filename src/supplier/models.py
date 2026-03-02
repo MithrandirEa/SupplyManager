@@ -139,6 +139,11 @@ class OrderItem(models.Model):
         verbose_name="Quantité reçue",
         help_text="Rempli lors de la réception de la commande"
     )
+    invoiced_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Quantité facturée"
+    )
     notes = models.CharField(
         max_length=255,
         blank=True,

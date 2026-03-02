@@ -19,7 +19,12 @@
     <!-- Onglets de navigation -->
     <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab" aria-controls="items" aria-selected="true">
+            <button class="nav-link active" id="monthly-stats-tab" data-bs-toggle="tab" data-bs-target="#monthly-stats" type="button" role="tab" aria-controls="monthly-stats" aria-selected="true">
+                <i class="bi bi-calendar-range"></i> Suivi mensuel
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab" aria-controls="items" aria-selected="false">
                 <i class="bi bi-box-seam"></i> Matériels
             </button>
         </li>
@@ -32,15 +37,102 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="inventories-tab" data-bs-toggle="tab" data-bs-target="#inventories" type="button" role="tab" aria-controls="inventories" aria-selected="false">
                 <i class="bi bi-clipboard-check"></i> Inventaires
-                <span class="badge bg-secondary">{{ inventories|length }}</span>
             </button>
         </li>
     </ul>
     
     <!-- Contenu des onglets -->
     <div class="tab-content" id="myTabContent">
+        <!-- Onglet Suivi mensuel -->
+        <div class="tab-pane fade show active" id="monthly-stats" role="tabpanel" aria-labelledby="monthly-stats-tab">
+            <div class="d-flex justify-content-end mb-3">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Exporter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'export_monthly_stats' %}?fmt=csv"><i class="bi bi-filetype-csv text-success me-1"></i>CSV / Google Sheets</a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_monthly_stats' %}?fmt=excel"><i class="bi bi-file-earmark-excel text-success me-1"></i>Excel (.xlsx)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="accordion" id="monthlyStatsAccordion">
+                {% for month_data in monthly_tables %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" 
+                                aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                                aria-controls="collapse{{ forloop.counter }}">
+                            <strong>{{ month_data.month|date:"F Y"|capfirst }}</strong>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ forloop.counter }}" 
+                         class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                         aria-labelledby="heading{{ forloop.counter }}" 
+                         data-bs-parent="#monthlyStatsAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle text-center mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="min-width: 250px;" class="bg-light start-0 text-start ps-3">Indicateur</th>
+                                            {% for item in all_items_headers %}
+                                                <th style="min-width: 120px;">{{ item.name }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="text-start ps-3 bg-light start-0">Quantité totale envoyée</th>
+                                            {% for stat in month_data.stats %}
+                                                <td>{{ stat.sent }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                        <tr>
+                                            <th class="text-start ps-3 bg-light start-0">Quantité totale reçue</th>
+                                            {% for stat in month_data.stats %}
+                                                <td>{{ stat.received }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                        <tr>
+                                            <th class="text-start ps-3 bg-light start-0">Différence reçue</th>
+                                            {% for stat in month_data.stats %}
+                                                <td class="{% if stat.diff_recv < 0 %}text-danger fw-bold{% elif stat.diff_recv > 0 %}text-info fw-bold{% endif %}">
+                                                    {{ stat.diff_recv }}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                        <tr class="table-secondary">
+                                            <th class="text-start ps-3 bg-light start-0">Quantité facturée</th>
+                                            {% for stat in month_data.stats %}
+                                                <td>{{ stat.invoiced }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                        <tr style="background-color: #f8d7da;">
+                                            <th class="text-start ps-3 bg-light start-0">Différence facturé - envoyé</th>
+                                            {% for stat in month_data.stats %}
+                                                <td class="{% if stat.diff_inv != 0 %}fw-bold{% endif %}">
+                                                    {{ stat.diff_inv }}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-info m-3">
+                    Aucune donnée disponible pour le suivi mensuel.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         <!-- Onglet Matériels -->
-        <div class="tab-pane fade show active" id="items" role="tabpanel" aria-labelledby="items-tab">
+        <div class="tab-pane fade" id="items" role="tabpanel" aria-labelledby="items-tab">
             <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
                 {% if request.user|is_manager %}
                 <a href="{% url 'create_item' %}" class="btn btn-success">Créer un nouvel item</a>

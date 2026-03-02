@@ -37,12 +37,25 @@ class CreateItemForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'min': 0}
             ),
             'available_quantity': forms.NumberInput(
-                attrs={'class': 'form-control', 'min': 0}
+                attrs={'class': 'form-control', 'readonly': 'readonly'}
             ),
             'information': forms.TextInput(
                 attrs={'class': 'form-control'}
             ),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        total_quantity = cleaned_data.get('total_quantity')
+        outside_quantity = cleaned_data.get('outside_quantity')
+
+        if total_quantity is not None and outside_quantity is not None:
+            if outside_quantity > total_quantity:
+                raise forms.ValidationError(
+                    "La quantité hors site (chez le client/fournisseur) ne peut pas "
+                    "être supérieure à la quantité totale."
+                )
+        return cleaned_data
 
 
 class ChangeItemForm(forms.ModelForm):
@@ -70,12 +83,25 @@ class ChangeItemForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'min': 0}
             ),
             'available_quantity': forms.NumberInput(
-                attrs={'class': 'form-control', 'min': 0}
+                attrs={'class': 'form-control', 'readonly': 'readonly'}
             ),
             'information': forms.TextInput(
                 attrs={'class': 'form-control'}
             ),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        total_quantity = cleaned_data.get('total_quantity')
+        outside_quantity = cleaned_data.get('outside_quantity')
+
+        if total_quantity is not None and outside_quantity is not None:
+            if outside_quantity > total_quantity:
+                raise forms.ValidationError(
+                    "La quantité hors site (chez le client/fournisseur) ne peut pas "
+                    "être supérieure à la quantité totale."
+                )
+        return cleaned_data
 
 
 class BuyItemForm(forms.ModelForm):

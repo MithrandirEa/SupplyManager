@@ -151,12 +151,21 @@ def receive_order(request, order_id):
         receptions = []
 
         for oi in order_items:
-            key = f'received_qty_{oi.id}'
-            raw = request.POST.get(key, '').strip()
+            key_recv = f'received_qty_{oi.id}'
+            key_inv = f'invoiced_qty_{oi.id}'
+            
+            raw_recv = request.POST.get(key_recv, '').strip()
+            raw_inv = request.POST.get(key_inv, '').strip()
+
             try:
-                received = int(raw)
+                received = int(raw_recv)
+                invoiced = int(raw_inv) if raw_inv else 0
+
                 if received < 0:
-                    raise ValueError
+                    raise ValueError("Quantité reçue négative")
+                if invoiced < 0:
+                    raise ValueError("Quantité facturée négative")
+                    
                 if received > oi.quantity:
                     errors.append(
                         f"{oi.item.name} : la quantité reçue ({received}) "
@@ -164,10 +173,10 @@ def receive_order(request, order_id):
                     )
             except (ValueError, TypeError):
                 errors.append(
-                    f"{oi.item.name} : valeur invalide."
+                    f"{oi.item.name} : valeurs invalides."
                 )
                 continue
-            receptions.append((oi, received))
+            receptions.append((oi, received, invoiced))
 
         if errors:
             return render(request, 'receive_order.html', {
@@ -178,7 +187,7 @@ def receive_order(request, order_id):
             })
 
         # Appliquer les réceptions
-        for oi, received in receptions:
+        for oi, received, invoiced in receptions:
             remaining = oi.quantity - received
             item = oi.item
 
@@ -187,9 +196,12 @@ def receive_order(request, order_id):
             item.outside_quantity = max(0, item.outside_quantity - received)
             item.save(update_fields=['available_quantity', 'outside_quantity'])
 
-            # Enregistrer la quantité reçue sur l'OrderItem
+            # Enregistrer les quantités sur l'OrderItem
             oi.received_quantity = received
-            oi.save(update_fields=['received_quantity'])
+            oi.invoiced_quantity = invoiced
+            oi.save(update_fields=['received_quantity', 'invoiced_quantity'])
+
+        # Clôturer la commande
 
         # Clôturer la commande
         order.status = 'completed'

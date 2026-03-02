@@ -436,3 +436,96 @@ def export_inventories_all_detail_excel(inventories):
     _style_header_row(ws)
     _autofit(ws)
     return _excel_response(wb, 'inventaires_detail.xlsx')
+
+
+# ─────────────────────────────────────────────
+#  MONTHLY STATS
+# ─────────────────────────────────────────────
+
+MONTHLY_STATS_HEADERS = [
+    'Mois', 'Article', 'Catégorie', 'Quantité envoyée', 'Quantité reçue', 'Quantité facturée',
+    'Différence Reçu', 'Différence Facturé'
+]
+
+
+def _get_monthly_stats_rows():
+    from collections import defaultdict
+    from supplier.models import OrderItem
+    from supply.models import Item
+    from django.db.models import Sum
+    from django.db.models.functions import TruncMonth, Coalesce
+
+    # 1. Tous les items (disponibles)
+    items = Item.objects.filter(is_available=True).select_related('category').order_by('category__name', 'name')
+    
+    # 2. Stats
+    raw_stats = OrderItem.objects.annotate(
+        month=TruncMonth('order__order_date')
+    ).values('month', 'item').annotate(
+        sent=Coalesce(Sum('quantity'), 0),
+        received=Coalesce(Sum('received_quantity'), 0),
+        invoiced=Coalesce(Sum('invoiced_quantity'), 0),
+    ).order_by('-month', 'item')
+
+    # 3. Grouper par mois
+    grouped_stats = defaultdict(dict)
+    months = set()
+    
+    for stat in raw_stats:
+        m = stat['month']
+        if m:
+            months.add(m)
+            grouped_stats[m][stat['item']] = stat
+
+    # On trie les mois du plus récent au plus ancien
+    sorted_months = sorted(list(months), reverse=True)
+    
+    rows = []
+    # Pour l'export, on veut peut-être dans l'ordre chronologique ? 
+    # Le user voit le plus récent en premier au dashboard, mais un export est souvent chrono.
+    # Restons cohérent avec l'UI : décroissant.
+    
+    for m in sorted_months:
+        month_str = m.strftime('%m/%Y')
+        for item in items:
+            stats = grouped_stats[m].get(item.id, {'sent': 0, 'received': 0, 'invoiced': 0})
+            s = stats['sent']
+            r = stats['received']
+            i = stats['invoiced']
+            
+            # Si aucune activité pour cet item ce mois-ci, faut-il l'afficher ?
+            # L'UI l'affiche (matrice complète). Donc oui.
+            
+            rows.append([
+                month_str,
+                item.name,
+                item.category.name if item.category else '',
+                s,
+                r,
+                i,
+                r - s,      # Diff Reçu (Reçu - Envoyé)
+                i - s       # Diff Facturé (Facturé - Envoyé)
+            ])
+    return rows
+
+
+def export_monthly_stats_csv():
+    response, writer = _csv_response('suivi_mensuel.csv')
+    writer.writerow(MONTHLY_STATS_HEADERS)
+    for row in _get_monthly_stats_rows():
+        writer.writerow(row)
+    return response
+
+
+def export_monthly_stats_excel():
+    import openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Suivi Mensuel'
+    ws.append(MONTHLY_STATS_HEADERS)
+    for row in _get_monthly_stats_rows():
+        ws.append(row)
+    _style_header_row(ws)
+    _autofit(ws)
+    return _excel_response(wb, 'suivi_mensuel.xlsx')
+
