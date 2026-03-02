@@ -7,7 +7,7 @@
 <div class="container mt-4">
     <h2 class="mb-4">Gestion des fournisseurs</h2>
     <div class="mb-3">
-        {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+        {% if request.user|is_manager %}
         <a href="{% url 'create_supplier' %}" class="btn btn-success">Créer un nouveau fournisseur</a>
         {% endif %}
     </div>
@@ -48,7 +48,7 @@
                         {{ supplier.other_details }}
                     </td>
                     <td onclick="event.stopPropagation()">
-                        {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+                        {% if request.user|is_manager %}
                         <a href="{% url 'change_supplier' supplier_id=supplier.id %}" class="btn btn-sm btn-primary">Modifier</a>
                         <button type="button" class="btn btn-sm btn-danger" 
                                 data-bs-toggle="modal" 

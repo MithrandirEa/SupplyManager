@@ -26,7 +26,6 @@ import supplier.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('home/', core.views.home, name='home'),
     path('dashboard/', core.views.dashboard, name='dashboard'),
     
     # Actions rapides AJAX du dashboard
@@ -81,6 +80,7 @@ urlpatterns = [
     ),
 
     # Routes de gestion des items
+    path('create-category/', supply.views.create_category, name='create_category'),
     path('create-item/', supply.views.create_item, name='create_item'),
     path(
         'change-item/<int:item_id>/',

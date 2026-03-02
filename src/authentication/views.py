@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def login_view(request):
-    return redirect('home')
+    return redirect('dashboard')
 
 
 @login_required
@@ -13,7 +13,9 @@ def logout_view(request):
     return redirect('login')
 
 
-@login_required
+from .decorators import role_required
+
+@role_required(['ADMIN', 'DIRECTOR'])
 def create_user(request):
     from .forms import CustomUserCreationForm
     from django.contrib import messages
@@ -42,7 +44,7 @@ def create_user(request):
     return render(request, 'create_user.html', {'form': form})
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def change_user(request, user_id):
     from .forms import CustomUserChangeForm
     from .models import User
@@ -85,7 +87,7 @@ def change_user(request, user_id):
     )
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def delete_user(request, user_id):
     from .models import User
     from django.contrib import messages

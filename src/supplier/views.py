@@ -1,11 +1,12 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
+from authentication.decorators import role_required
 
 from supplier.forms import Supplier, ChangeSupplierForm, CreateSupplierForm
 from supply.models import Item
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def create_supplier(request):
     if request.method == 'POST':
         form = CreateSupplierForm(request.POST)
@@ -29,7 +30,7 @@ def create_supplier(request):
     })
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def change_supplier(request, supplier_id):
     supplier = Supplier.objects.get(id=supplier_id)
     if request.method == 'POST':
@@ -58,7 +59,7 @@ def change_supplier(request, supplier_id):
     })
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def delete_supplier(request, supplier_id):
     supplier = Supplier.objects.get(id=supplier_id)
     supplier.delete()
@@ -113,7 +114,7 @@ def change_order(request, order_id):
     })
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def delete_order(request, order_id):
     """Vue pour supprimer une commande"""
     from supplier.models import Order

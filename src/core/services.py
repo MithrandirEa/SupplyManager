@@ -52,7 +52,7 @@ class DashboardService:
         ).filter(
             outside_quantity__gt=0,
             is_available=True
-        )
+        ).order_by('category__name', 'name')
         return list(items)
 
     @staticmethod

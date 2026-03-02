@@ -5,7 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Accueil - LaundryWatcher{% endblock %}</title>
+    <meta name="user-is-manager" content="{{ request.user|is_manager|yesno:'true,false' }}">
+    <title>{% block title %}Accueil - SupplyManager{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -31,14 +32,10 @@
     <nav class="navbar navbar-expand-lg navbar-light sticky-top shadows-sm py-2"
         style="background-color: rgb(206, 243, 197); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"> 
         <div class="container-fluid px-4">
-            {% if request.user|has_group:"Admin" or request.user|has_group:"Responsable" %}
             <a class="navbar-brand d-none d-lg-block" href="{% url 'dashboard' %}">
-            {% else %}
-            <a class="navbar-brand d-none d-lg-block" href="{% url 'home' %}">
-            {% endif %}
                 <h1 class="display-6 fw-bolder text-black mb-0"
                 style="text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);">
-                LaundryWatcher
+                SupplyManager
                 <span class="text-success fs-4 mb-0" style="text-shadow: none;">{{ user.username }}</span>
                 </h1>
             </a>
@@ -47,16 +44,11 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <div class="navbar-nav fs-4 gap-3 text-end text-lg-start">
-                        {% if request.user|has_group:"Équipe" %}
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'home' %}active fw-bold{%endif %} href="{% url 'home' %}">Accueil</a>
-                        {% endif %}
-                        {% if request.user|has_group:"Admin" or request.user|has_group:"Responsable" %}
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'dashboard' %}active fw-bold{%endif %} href="{% url 'dashboard' %}">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'staff-management' %}active fw-bold{%endif %} href="{% url 'staff_management' %}">Équipes</a>
-                        {% endif %}
-                        <a class="nav-link" {% if request.resolver_match.url_name == 'supplies-management' %}active fw-bold{%endif %} href="{% url 'supplies_management' %}">Matériels</a>
+                        <a class="nav-link" href="{% url 'staff_management' %}">Équipes</a>
+                        <a class="nav-link" href="{% url 'supplies_management' %}">Matériels</a>
                         <a class="nav-link" {% if request.resolver_match.url_name == 'suppliers-management' %}active fw-bold{%endif %} href="{% url 'suppliers_management' %}">Fournisseurs</a>
                         <button type="button" class="nav-link bg-transparent border-0" 
                                 data-bs-toggle="modal" 
@@ -75,7 +67,7 @@
     </main>
     
     <footer>
-        <p>&copy; 2026 LaundryWatcher - Created by SCIPION Clément</p>
+        <p>&copy; 2026 SupplyManager - Created by SCIPION Clément</p>
     </footer>
     
     {% if user.is_authenticated %}

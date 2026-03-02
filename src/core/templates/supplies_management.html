@@ -42,8 +42,9 @@
         <!-- Onglet Matériels -->
         <div class="tab-pane fade show active" id="items" role="tabpanel" aria-labelledby="items-tab">
             <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-                {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+                {% if request.user|is_manager %}
                 <a href="{% url 'create_item' %}" class="btn btn-success">Créer un nouvel item</a>
+                <a href="{% url 'create_category' %}" class="btn btn-outline-success">Créer une catégorie</a>
                 {% endif %}
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -84,7 +85,7 @@
                                 {% endfor %}
                             </td>
                             <td onclick="event.stopPropagation();">
-                                {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
+                                {% if request.user|is_manager %}
                                 <a href="{% url 'change_item' item_id=item.id %}" class="btn btn-sm btn-primary" onclick="event.stopPropagation();">Modifier</a>
                                 <button type="button" class="btn btn-sm btn-danger" 
                                         data-bs-toggle="modal" 
@@ -178,7 +179,6 @@
                                 </div>
                             </td>
                             <td>
-                                {% if user|has_group:"Admin" or user|has_group:"Responsable" %}
                                 {% if order.status != 'completed' %}
                                 <a href="{% url 'receive_order' order_id=order.id %}" class="btn btn-sm btn-success">
                                     <i class="bi bi-box-arrow-in-down"></i> Réceptionner
@@ -187,6 +187,7 @@
                                 <a href="{% url 'change_order' order_id=order.id %}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil"></i> Modifier
                                 </a>
+                                {% if request.user|is_manager %}
                                 <button type="button" class="btn btn-sm btn-danger" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#deleteOrderModal{{ order.id }}">

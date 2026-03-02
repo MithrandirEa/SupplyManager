@@ -1,12 +1,26 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import CreateItemForm, ChangeItemForm
+from authentication.decorators import role_required
+from .forms import CreateItemForm, ChangeItemForm, CreateCategoryForm
 
 from supply.models import Item
 from supplier.models import Supplier
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
+def create_category(request):
+    if request.method == 'POST':
+        form = CreateCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('supplies_management')
+    else:
+        form = CreateCategoryForm()
+
+    return render(request, 'create_category.html', {'form': form})
+
+
+@role_required(['ADMIN', 'DIRECTOR'])
 def create_item(request):
     if request.method == 'POST':
         form = CreateItemForm(request.POST)
@@ -35,7 +49,7 @@ def create_item(request):
     })
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def change_item(request, item_id):
     item = Item.objects.get(id=item_id)
     if request.method == 'POST':
@@ -66,7 +80,7 @@ def change_item(request, item_id):
     })
 
 
-@login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 def delete_item(request, item_id):
     item = Item.objects.get(id=item_id)
     item.delete()

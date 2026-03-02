@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from authentication.models import User
 from django.contrib.auth.decorators import login_required, permission_required
+from authentication.decorators import role_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
@@ -13,12 +14,6 @@ from supplier.forms import QuickOrderForm
 
 
 @login_required
-def home(request):
-    return render(request, 'home.html')
-
-
-@login_required
-@permission_required('authentication.view_user', raise_exception=True)
 def staff_management(request):
     users = User.objects.all().order_by('role', 'username')
     return render(request, 'staff_management.html', {'users': users})
@@ -61,7 +56,6 @@ def supplies_management(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
 def suppliers_management(request):
     suppliers = Supplier.objects.all().order_by('name')
     return render(
@@ -71,31 +65,14 @@ def suppliers_management(request):
     )
 
 
-def _user_can_access_dashboard(user):
-    """
-    Vérifie si l'utilisateur peut accéder au dashboard.
-
-    Seuls Admin et Director ont accès.
-    """
-    return user.role in [User.ADMIN, User.DIRECTOR]
-
-
 @login_required
 def dashboard(request):
     """
     Vue principale du dashboard.
 
     Affiche les stocks, alertes et statut des commandes.
-    Accessible uniquement aux Admin et Director.
+    Accessible à tous les utilisateurs authentifiés.
     """
-    # Vérification des permissions
-    if not _user_can_access_dashboard(request.user):
-        messages.error(
-            request,
-            "Vous n'avez pas la permission d'accéder au dashboard."
-        )
-        return redirect('home')
-
     # Récupération de toutes les données du dashboard
     dashboard_data = DashboardService.get_all_dashboard_data()
 
@@ -162,13 +139,6 @@ def create_order_ajax(request):
     """
     Vue AJAX pour créer une commande rapide depuis le dashboard
     """
-    # Vérification des permissions
-    if not _user_can_access_dashboard(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': 'Permission refusée.'
-        }, status=403)
-
     form = QuickOrderForm(request.POST, user=request.user)
     
     if form.is_valid():
@@ -191,13 +161,6 @@ def update_inventory_ajax(request):
     """
     Vue AJAX pour enregistrer un inventaire global (tous les articles).
     """
-    # Vérification des permissions
-    if not _user_can_access_dashboard(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': 'Permission refusée.'
-        }, status=403)
-
     form = BulkInventoryForm(request.POST)
 
     if form.is_valid():
@@ -218,18 +181,12 @@ def update_inventory_ajax(request):
 
 
 @login_required
+@role_required(['ADMIN', 'DIRECTOR'])
 @require_http_methods(["POST"])
 def extend_contract_ajax(request):
     """
     Vue AJAX pour prolonger un contrat
     """
-    # Vérification des permissions
-    if not _user_can_access_dashboard(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': 'Permission refusée.'
-        }, status=403)
-
     form = ContractExtensionForm(request.POST)
     
     if form.is_valid():

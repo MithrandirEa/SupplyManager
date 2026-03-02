@@ -1,5 +1,5 @@
 /**
- * DASHBOARD JAVASCRIPT - LaundryWatcher
+ * DASHBOARD JAVASCRIPT - SupplyManager
  * Fonctionnalités interactives du dashboard
  */
 
@@ -442,7 +442,10 @@
      * Initialise le modal de prolongation de contrat
      */
     function initContractModal() {
-        // Ajouter des boutons sur les alertes de contrat
+        // Ajouter des boutons sur les alertes de contrat uniquement si manager
+        const metaInfo = document.querySelector('meta[name="user-is-manager"]');
+        const isManager = metaInfo ? metaInfo.content === 'true' : false;
+
         document.querySelectorAll('[data-user-id]').forEach(row => {
             const userId = row.dataset.userId;
             const username = row.dataset.username;
@@ -450,7 +453,7 @@
             
             if (!row.querySelector('.btn-contract')) {
                 const actionCell = row.querySelector('.action-cell');
-                if (actionCell) {
+                if (actionCell && isManager) {
                     const btn = document.createElement('button');
                     btn.className = 'btn btn-sm btn-warning btn-contract';
                     btn.innerHTML = '<i class="bi bi-calendar-plus"></i>';

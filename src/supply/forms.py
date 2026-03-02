@@ -1,6 +1,16 @@
 from django import forms
-from .models import Item
+from .models import Item, ItemsCategory
 
+class CreateCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ItemsCategory
+        fields = ['name']
+        labels = {
+            'name': 'Nom de la catégorie'
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'})
+        }
 
 class CreateItemForm(forms.ModelForm):
     class Meta:
