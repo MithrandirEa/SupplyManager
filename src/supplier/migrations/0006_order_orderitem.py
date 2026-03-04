@@ -18,16 +18,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Order',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order_date', models.DateTimeField(default=django.utils.timezone.now, verbose_name='Date de commande')),
-                ('expected_return_date', models.DateField(verbose_name='Date de retour attendue')),
-                ('actual_return_date', models.DateField(blank=True, null=True, verbose_name='Date de retour réelle')),
-                ('status', models.CharField(choices=[('pending', 'En attente'), ('delayed', 'En retard'), ('completed', 'Terminée')], default='pending', max_length=20, verbose_name='Statut')),
-                ('notes', models.TextField(blank=True, null=True, verbose_name='Notes')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('order_date', models.DateTimeField(
+                    default=django.utils.timezone.now, verbose_name='Date de commande')),
+                ('expected_return_date', models.DateField(
+                    verbose_name='Date de retour attendue')),
+                ('actual_return_date', models.DateField(blank=True,
+                 null=True, verbose_name='Date de retour réelle')),
+                ('status', models.CharField(choices=[('pending', 'En attente'), ('delayed', 'En retard'),
+                 ('completed', 'Terminée')], default='pending', max_length=20, verbose_name='Statut')),
+                ('notes', models.TextField(
+                    blank=True, null=True, verbose_name='Notes')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='orders_created', to=settings.AUTH_USER_MODEL, verbose_name='Créé par')),
-                ('supplier', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='orders', to='supplier.supplier', verbose_name='Fournisseur')),
+                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
+                 related_name='orders_created', to=settings.AUTH_USER_MODEL, verbose_name='Créé par')),
+                ('supplier', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='orders', to='supplier.supplier', verbose_name='Fournisseur')),
             ],
             options={
                 'verbose_name': 'Commande',
@@ -38,11 +46,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OrderItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.PositiveIntegerField(verbose_name='Quantité')),
-                ('notes', models.CharField(blank=True, max_length=255, null=True, verbose_name='Notes')),
-                ('item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='order_items', to='supply.item', verbose_name='Article')),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='order_items', to='supplier.order', verbose_name='Commande')),
+                ('notes', models.CharField(blank=True,
+                 max_length=255, null=True, verbose_name='Notes')),
+                ('item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='order_items', to='supply.item', verbose_name='Article')),
+                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='order_items', to='supplier.order', verbose_name='Commande')),
             ],
             options={
                 'verbose_name': 'Article de commande',

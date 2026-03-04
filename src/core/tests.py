@@ -1,18 +1,18 @@
 """
 Tests pour le dashboard et ses composants
 """
+import json
 from datetime import date, timedelta
-from django.test import TestCase, Client
-from django.urls import reverse
+
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
-import json
-from supply.models import Item, ItemsCategory, Inventory, InventoryEntry
-from supplier.models import Supplier, Order, OrderItem
-from core.services import DashboardService
 from core.forms import BulkInventoryForm, ChangeInventoryForm
-
+from core.services import DashboardService
+from supplier.models import Order, OrderItem, Supplier
+from supply.models import Inventory, InventoryEntry, Item, ItemsCategory
 
 User = get_user_model()
 
@@ -277,9 +277,8 @@ class DashboardViewTestCase(TestCase):
 
     def test_dashboard_performance(self):
         """Test de performance : moins de 20 requêtes SQL"""
-        from django.test.utils import override_settings
         from django.db import connection
-        from django.test.utils import CaptureQueriesContext
+        from django.test.utils import CaptureQueriesContext, override_settings
 
         self.client.login(username='admin_view', password='testpass123')
 
@@ -448,13 +447,15 @@ class ChangeInventoryTestCase(TestCase):
         self.assertEqual(entry.counted_quantity, 12)
         self.item.refresh_from_db()
         self.assertEqual(self.item.available_quantity, 12)
-        self.assertEqual(self.item.total_quantity, 12 + self.item.outside_quantity)
+        self.assertEqual(self.item.total_quantity, 12 +
+                         self.item.outside_quantity)
 
     def test_change_inventory_view_get(self):
         """La vue change_inventory affiche le formulaire en GET."""
         self.client.login(username='inv_admin2', password='pass')
         response = self.client.get(
-            reverse('change_inventory', kwargs={'inventory_id': self.inventory.id})
+            reverse('change_inventory', kwargs={
+                    'inventory_id': self.inventory.id})
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'inventoryAccordion')
@@ -467,7 +468,8 @@ class ChangeInventoryTestCase(TestCase):
             'notes': 'mise à jour',
         }
         response = self.client.post(
-            reverse('change_inventory', kwargs={'inventory_id': self.inventory.id}),
+            reverse('change_inventory', kwargs={
+                    'inventory_id': self.inventory.id}),
             data
         )
         self.assertRedirects(response, reverse('supplies_management'))

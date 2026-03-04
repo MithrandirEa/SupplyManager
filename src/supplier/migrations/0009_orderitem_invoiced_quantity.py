@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderitem',
             name='invoiced_quantity',
-            field=models.PositiveIntegerField(blank=True, null=True, verbose_name='Quantité facturée'),
+            field=models.PositiveIntegerField(
+                blank=True, null=True, verbose_name='Quantité facturée'),
         ),
     ]

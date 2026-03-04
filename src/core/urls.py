@@ -2,8 +2,8 @@
 URLs pour l'application core
 """
 from django.urls import path
-from . import views
 
+from . import views
 
 app_name = 'core'
 
@@ -17,7 +17,7 @@ urlpatterns = [
         views.suppliers_management,
         name='suppliers_management'
     ),
-    
+
     # Actions rapides AJAX du dashboard
     path(
         'dashboard/create-order/',
@@ -34,8 +34,8 @@ urlpatterns = [
         views.extend_contract_ajax,
         name='extend_contract_ajax'
     ),
-    
-    # Impression fiche inventaire
-    path('print-inventory-sheet/', views.print_inventory_sheet, name='print_inventory_sheet'),
-]
 
+    # Impression fiche inventaire
+    path('print-inventory-sheet/', views.print_inventory_sheet,
+         name='print_inventory_sheet'),
+]

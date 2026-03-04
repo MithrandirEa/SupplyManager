@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='order',
             name='status',
-            field=models.CharField(choices=[('pending', 'En attente'), ('delayed', 'En retard'), ('completed', 'Terminée'), ('partial', 'Terminée/partielle')], default='pending', max_length=20, verbose_name='Statut'),
+            field=models.CharField(choices=[('pending', 'En attente'), ('delayed', 'En retard'), ('completed', 'Terminée'), (
+                'partial', 'Terminée/partielle')], default='pending', max_length=20, verbose_name='Statut'),
         ),
     ]

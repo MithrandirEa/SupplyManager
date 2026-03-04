@@ -8,10 +8,10 @@ from datetime import datetime
 
 from django.http import HttpResponse
 
-
 # ─────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────
+
 
 def _csv_response(filename: str) -> tuple:
     """Retourne un HttpResponse CSV et le writer associé."""
@@ -23,7 +23,7 @@ def _csv_response(filename: str) -> tuple:
 
 def _excel_response(wb, filename: str) -> HttpResponse:
     """Sérialise un workbook openpyxl dans un HttpResponse."""
-    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.styles import Alignment, Font, PatternFill
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -35,7 +35,8 @@ def _excel_response(wb, filename: str) -> HttpResponse:
 def _style_header_row(ws):
     """Met en gras et en couleur la première ligne d'un worksheet."""
     from openpyxl.styles import Font, PatternFill
-    fill = PatternFill(start_color='2F4F6F', end_color='2F4F6F', fill_type='solid')
+    fill = PatternFill(start_color='2F4F6F',
+                       end_color='2F4F6F', fill_type='solid')
     for cell in ws[1]:
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = fill
@@ -69,9 +70,11 @@ def _items_row(item):
         item.excess_quantity,
         item.information or '',
         ', '.join(s.name for s in item.suppliers.all()),
-        item.stock_entry_date.strftime('%d/%m/%Y') if item.stock_entry_date else '',
+        item.stock_entry_date.strftime(
+            '%d/%m/%Y') if item.stock_entry_date else '',
         item.last_inventory_quantity,
-        item.last_inventory_date.strftime('%d/%m/%Y %H:%M') if item.last_inventory_date else '',
+        item.last_inventory_date.strftime(
+            '%d/%m/%Y %H:%M') if item.last_inventory_date else '',
     ]
 
 
@@ -112,7 +115,8 @@ def _order_list_row(order):
         order.supplier.name,
         order.order_date.strftime('%d/%m/%Y %H:%M'),
         order.expected_return_date.strftime('%d/%m/%Y'),
-        order.actual_return_date.strftime('%d/%m/%Y') if order.actual_return_date else '',
+        order.actual_return_date.strftime(
+            '%d/%m/%Y') if order.actual_return_date else '',
         order.get_status_display(),
         order.order_items.count(),
         order.notes or '',
@@ -164,9 +168,12 @@ def export_order_detail_csv(order):
     # En-tête de la commande
     writer.writerow(['Commande #', order.id])
     writer.writerow(['Fournisseur', order.supplier.name])
-    writer.writerow(['Date commande', order.order_date.strftime('%d/%m/%Y %H:%M')])
-    writer.writerow(['Retour attendu', order.expected_return_date.strftime('%d/%m/%Y')])
-    writer.writerow(['Retour réel', order.actual_return_date.strftime('%d/%m/%Y') if order.actual_return_date else ''])
+    writer.writerow(
+        ['Date commande', order.order_date.strftime('%d/%m/%Y %H:%M')])
+    writer.writerow(
+        ['Retour attendu', order.expected_return_date.strftime('%d/%m/%Y')])
+    writer.writerow(['Retour réel', order.actual_return_date.strftime(
+        '%d/%m/%Y') if order.actual_return_date else ''])
     writer.writerow(['Statut', order.get_status_display()])
     writer.writerow(['Notes', order.notes or ''])
     writer.writerow([])
@@ -188,7 +195,8 @@ def export_order_detail_excel(order):
     ws.append(['Fournisseur', order.supplier.name])
     ws.append(['Date commande', order.order_date.strftime('%d/%m/%Y %H:%M')])
     ws.append(['Retour attendu', order.expected_return_date.strftime('%d/%m/%Y')])
-    ws.append(['Retour réel', order.actual_return_date.strftime('%d/%m/%Y') if order.actual_return_date else ''])
+    ws.append(['Retour réel', order.actual_return_date.strftime(
+        '%d/%m/%Y') if order.actual_return_date else ''])
     ws.append(['Statut', order.get_status_display()])
     ws.append(['Notes', order.notes or ''])
     ws.append([])
@@ -199,7 +207,8 @@ def export_order_detail_excel(order):
     _style_header_row(ws)
     # Re-style only the actual header row
     from openpyxl.styles import Font, PatternFill
-    fill = PatternFill(start_color='2F4F6F', end_color='2F4F6F', fill_type='solid')
+    fill = PatternFill(start_color='2F4F6F',
+                       end_color='2F4F6F', fill_type='solid')
     for cell in ws[header_row]:
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = fill
@@ -239,7 +248,8 @@ def _orders_all_detail_rows(orders):
                 order.supplier.name,
                 order.order_date.strftime('%d/%m/%Y %H:%M'),
                 order.expected_return_date.strftime('%d/%m/%Y'),
-                order.actual_return_date.strftime('%d/%m/%Y') if order.actual_return_date else '',
+                order.actual_return_date.strftime(
+                    '%d/%m/%Y') if order.actual_return_date else '',
                 order.get_status_display(),
                 order.notes or '',
                 oi.item.name,
@@ -253,7 +263,8 @@ def _orders_all_detail_rows(orders):
                 order.id, order.supplier.name,
                 order.order_date.strftime('%d/%m/%Y %H:%M'),
                 order.expected_return_date.strftime('%d/%m/%Y'),
-                order.actual_return_date.strftime('%d/%m/%Y') if order.actual_return_date else '',
+                order.actual_return_date.strftime(
+                    '%d/%m/%Y') if order.actual_return_date else '',
                 order.get_status_display(), order.notes or '',
                 '', '', '', '', '',
             ])
@@ -344,7 +355,8 @@ def export_inventory_detail_csv(inventory):
     response, writer = _csv_response(f'inventaire_{inventory.id}.csv')
     writer.writerow(['Inventaire #', inventory.id])
     writer.writerow(['Date', inventory.created_at.strftime('%d/%m/%Y %H:%M')])
-    writer.writerow(['Créé par', inventory.created_by.username if inventory.created_by else ''])
+    writer.writerow(
+        ['Créé par', inventory.created_by.username if inventory.created_by else ''])
     writer.writerow(['Notes', inventory.notes or ''])
     writer.writerow([])
     writer.writerow(INVENTORY_DETAIL_HEADERS)
@@ -362,14 +374,16 @@ def export_inventory_detail_excel(inventory):
 
     ws.append(['Inventaire #', inventory.id])
     ws.append(['Date', inventory.created_at.strftime('%d/%m/%Y %H:%M')])
-    ws.append(['Créé par', inventory.created_by.username if inventory.created_by else ''])
+    ws.append(
+        ['Créé par', inventory.created_by.username if inventory.created_by else ''])
     ws.append(['Notes', inventory.notes or ''])
     ws.append([])
 
     header_row = ws.max_row + 1
     ws.append(INVENTORY_DETAIL_HEADERS)
 
-    fill = PatternFill(start_color='2F4F6F', end_color='2F4F6F', fill_type='solid')
+    fill = PatternFill(start_color='2F4F6F',
+                       end_color='2F4F6F', fill_type='solid')
     for cell in ws[header_row]:
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = fill
@@ -397,7 +411,8 @@ INVENTORIES_ALL_DETAIL_HEADERS = [
 def _inventories_all_detail_rows(inventories):
     rows = []
     for inv in inventories:
-        entries = inv.entries.select_related('item__category').order_by('item__category__name', 'item__name')
+        entries = inv.entries.select_related('item__category').order_by(
+            'item__category__name', 'item__name')
         for entry in entries:
             rows.append([
                 inv.id,
@@ -450,14 +465,17 @@ MONTHLY_STATS_HEADERS = [
 
 def _get_monthly_stats_rows():
     from collections import defaultdict
+
+    from django.db.models import Sum
+    from django.db.models.functions import Coalesce, TruncMonth
+
     from supplier.models import OrderItem
     from supply.models import Item
-    from django.db.models import Sum
-    from django.db.models.functions import TruncMonth, Coalesce
 
     # 1. Tous les items (disponibles)
-    items = Item.objects.filter(is_available=True).select_related('category').order_by('category__name', 'name')
-    
+    items = Item.objects.filter(is_available=True).select_related(
+        'category').order_by('category__name', 'name')
+
     # 2. Stats
     raw_stats = OrderItem.objects.annotate(
         month=TruncMonth('order__order_date')
@@ -470,7 +488,7 @@ def _get_monthly_stats_rows():
     # 3. Grouper par mois
     grouped_stats = defaultdict(dict)
     months = set()
-    
+
     for stat in raw_stats:
         m = stat['month']
         if m:
@@ -479,23 +497,24 @@ def _get_monthly_stats_rows():
 
     # On trie les mois du plus récent au plus ancien
     sorted_months = sorted(list(months), reverse=True)
-    
+
     rows = []
-    # Pour l'export, on veut peut-être dans l'ordre chronologique ? 
+    # Pour l'export, on veut peut-être dans l'ordre chronologique ?
     # Le user voit le plus récent en premier au dashboard, mais un export est souvent chrono.
     # Restons cohérent avec l'UI : décroissant.
-    
+
     for m in sorted_months:
         month_str = m.strftime('%m/%Y')
         for item in items:
-            stats = grouped_stats[m].get(item.id, {'sent': 0, 'received': 0, 'invoiced': 0})
+            stats = grouped_stats[m].get(
+                item.id, {'sent': 0, 'received': 0, 'invoiced': 0})
             s = stats['sent']
             r = stats['received']
             i = stats['invoiced']
-            
+
             # Si aucune activité pour cet item ce mois-ci, faut-il l'afficher ?
             # L'UI l'affiche (matrice complète). Donc oui.
-            
+
             rows.append([
                 month_str,
                 item.name,
@@ -528,4 +547,3 @@ def export_monthly_stats_excel():
     _style_header_row(ws)
     _autofit(ws)
     return _excel_response(wb, 'suivi_mensuel.xlsx')
-

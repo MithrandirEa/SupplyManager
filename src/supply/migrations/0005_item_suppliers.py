@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='item',
             name='suppliers',
-            field=models.ManyToManyField(blank=True, related_name='items', to='supplier.supplier'),
+            field=models.ManyToManyField(
+                blank=True, related_name='items', to='supplier.supplier'),
         ),
     ]

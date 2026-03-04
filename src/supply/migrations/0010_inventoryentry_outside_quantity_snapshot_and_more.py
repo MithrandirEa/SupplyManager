@@ -13,11 +13,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='inventoryentry',
             name='outside_quantity_snapshot',
-            field=models.PositiveIntegerField(default=0, help_text="Quantité chez le fournisseur au moment de l'inventaire"),
+            field=models.PositiveIntegerField(
+                default=0, help_text="Quantité chez le fournisseur au moment de l'inventaire"),
         ),
         migrations.AlterField(
             model_name='inventoryentry',
             name='counted_quantity',
-            field=models.PositiveIntegerField(default=0, help_text="Quantité comptée sur site lors de l'inventaire"),
+            field=models.PositiveIntegerField(
+                default=0, help_text="Quantité comptée sur site lors de l'inventaire"),
         ),
     ]

@@ -15,22 +15,26 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='created_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_users', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                    related_name='created_users', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='user',
             name='date_end_contract',
-            field=models.DateField(blank=True, null=True, verbose_name='Date fin contrat'),
+            field=models.DateField(blank=True, null=True,
+                                   verbose_name='Date fin contrat'),
         ),
         migrations.AddField(
             model_name='user',
             name='date_start_contract',
-            field=models.DateField(blank=True, null=True, verbose_name='Date début contrat'),
+            field=models.DateField(blank=True, null=True,
+                                   verbose_name='Date début contrat'),
         ),
         migrations.AddField(
             model_name='user',
             name='revoked_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='revoked_users', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                    related_name='revoked_users', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='user',
@@ -40,6 +44,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='role',
-            field=models.CharField(choices=[('ADMIN', 'Admin'), ('DIRECTOR', 'Responsable'), ('CREW', 'Équipe')], default='CREW', max_length=15),
+            field=models.CharField(choices=[('ADMIN', 'Admin'), ('DIRECTOR', 'Responsable'),
+                                   ('CREW', 'Équipe')], default='CREW', max_length=15),
         ),
     ]

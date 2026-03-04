@@ -100,72 +100,785 @@
             <!-- Section Dashboard -->
             <section id="dashboard" class="mb-5">
                 <h3><i class="bi bi-speedometer2"></i> Le Dashboard</h3>
-                <p>Le tableau de bord est votre point d'entrée principal. Il vous offre une vue synthétique des indicateurs clés :</p>
+                <p>
+                    Le tableau de bord est la page d'accueil de l'application. Il centralise en un seul écran toutes les informations
+                    critiques : alertes actives, état des stocks et suivi des commandes en cours. Chaque section est repliable pour
+                    vous permettre de vous concentrer sur ce qui compte.
+                </p>
+
+                <!-- En-tête -->
+                <h4 class="mt-4"><i class="bi bi-badge-wc"></i> Indicateur global d'alertes</h4>
+                <p>
+                    En haut à droite de la page, un <strong>badge coloré</strong> indique en un coup d'œil l'état général :
+                </p>
                 <ul>
-                    <li><strong>Articles en alerte :</strong> Liste des articles dont le stock disponible est critique.</li>
-                    <li><strong>Commandes en cours :</strong> Suivi des commandes envoyées aux fournisseurs mais non encore réceptionnées.</li>
-                    <li><strong>Commandes en retard :</strong> Alertes sur les commandes dont la date de retour prévue est dépassée.</li>
+                    <li><span class="badge bg-danger">N alerte(s)</span> — il existe des anomalies nécessitant votre attention (stocks, commandes, contrats).</li>
+                    <li><span class="badge bg-success">Aucune alerte</span> — tout est en ordre, aucune action urgente n'est requise.</li>
                 </ul>
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> <strong>Astuce :</strong> Utilisez les boutons d'actions rapides pour créer une commande ou mettre à jour un inventaire sans changer de page.
+
+                <!-- Actions rapides -->
+                <h4 class="mt-4"><i class="bi bi-lightning-charge"></i> Actions Rapides</h4>
+                <p>
+                    En dessous de l'en-tête, une barre d'actions vous permet d'effectuer les opérations courantes
+                    <strong>sans quitter le Dashboard</strong>, via des fenêtres modales :
+                </p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bouton</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-primary fs-6"><i class="bi bi-plus-circle"></i> Créer une commande</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Ouvre un formulaire pour créer une nouvelle commande fournisseur. Sélectionnez le fournisseur,
+                                    renseignez une date de retour attendue, puis ajoutez les articles souhaités
+                                    (organisés par catégorie) avec leurs quantités. Les articles ajoutés passent immédiatement
+                                    de "Disponible" à "Extérieur" dans les stocks.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success fs-6"><i class="bi bi-box-arrow-in-down"></i> Réceptionner une commande</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Ouvre la liste des commandes en attente de réception. Un badge indique
+                                    le nombre de commandes concernées. Sélectionnez une commande et saisissez les quantités
+                                    effectivement reçues — les articles reviennent dans le stock "Disponible" et la commande
+                                    passe au statut "Terminée".
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info text-white fs-6"><i class="bi bi-clipboard-check"></i> Saisir un inventaire</span></td>
+                                <td><strong>Managers uniquement</strong></td>
+                                <td>
+                                    Ouvre un formulaire de saisie d'inventaire physique. Entrez les quantités comptées
+                                    sur site pour chaque article. Le système recalcule le stock disponible et
+                                    détecte automatiquement les écarts (manquants ou excédents) par rapport aux quantités
+                                    théoriques.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary fs-6"><i class="bi bi-printer"></i> Fiche inventaire</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Génère et ouvre dans un nouvel onglet une fiche inventaire imprimable. Un menu déroulant
+                                    vous permet de choisir l'ordre de tri :
+                                    <ul class="mb-0 mt-1">
+                                        <li><strong>Par catégorie</strong> — articles regroupés par famille.</li>
+                                        <li><strong>Ordre alphabétique</strong> — articles dans l'ordre A → Z.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Sections accordion -->
+                <h4 class="mt-4"><i class="bi bi-layout-accordion-collapsed"></i> Les 3 sections du tableau de bord</h4>
+                <p>
+                    Le Dashboard est organisé en trois sections repliables (accordéon). Chaque en-tête affiche un
+                    badge résumant le nombre d'éléments concernés.
+                </p>
+
+                <!-- ALERTES -->
+                <div class="card mb-3 border-danger">
+                    <div class="card-header bg-danger text-white fw-bold">
+                        <i class="bi bi-bell"></i> Section 1 : Alertes <small class="fw-normal">(ouverte par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>Cette section regroupe toutes les anomalies actives, réparties en trois sous-parties :</p>
+
+                        <h6><i class="bi bi-box-seam-fill text-danger"></i> Anomalies de Stock</h6>
+                        <p>
+                            Signale les articles dont les quantités réelles s'écartent des quantités théoriques
+                            constatées lors du dernier inventaire :
+                        </p>
+                        <ul>
+                            <li>
+                                <span class="badge bg-danger">Manquant : X</span> — l'inventaire physique révèle un
+                                <strong>déficit</strong> par rapport au stock théorique. Cela peut indiquer des pertes
+                                ou une erreur de comptage.
+                            </li>
+                            <li>
+                                <span class="badge bg-warning text-dark">Excès : X</span> — le comptage physique révèle
+                                un <strong>surplus</strong>, ce qui peut indiquer des articles non enregistrés ou revenus sans
+                                avoir été réceptionnés.
+                            </li>
+                        </ul>
+                        <p>Chaque ligne affiche le nom de l'article, sa catégorie et un message explicatif.</p>
+
+                        <hr>
+
+                        <h6><i class="bi bi-truck text-danger"></i> Anomalies de Commande</h6>
+                        <p>
+                            Liste les commandes fournisseurs dont la <strong>date de retour attendue est dépassée</strong>.
+                            Pour chaque commande en retard, vous voyez :
+                        </p>
+                        <ul>
+                            <li>Le numéro de commande et le nom du fournisseur concerné.</li>
+                            <li>La date à laquelle le retour était attendu.</li>
+                            <li>
+                                Le nombre de jours de retard :
+                                <span class="badge bg-danger">rouge</span> si le retard dépasse 7 jours,
+                                <span class="badge bg-warning text-dark">orange</span> sinon.
+                            </li>
+                        </ul>
+
+                        <hr>
+
+                        <h6><i class="bi bi-person-x text-danger"></i> Alertes Contrats (Crew)</h6>
+                        <p>
+                            Surveille les contrats des membres du personnel arrivant à expiration prochainement.
+                            Pour chaque alerte :
+                        </p>
+                        <ul>
+                            <li>Le nom d'utilisateur et le rôle de la personne concernée.</li>
+                            <li>La date de fin de contrat.</li>
+                            <li>
+                                Le nombre de jours restants :
+                                <span class="badge bg-danger">rouge</span> si le contrat expire très prochainement,
+                                <span class="badge bg-warning text-dark">orange</span> si l'échéance approche.
+                            </li>
+                            <li>
+                                Un bouton <strong>"Prolonger"</strong> permet d'ouvrir directement la fenêtre de
+                                modification de la date de fin de contrat sans quitter le Dashboard.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- STOCKS -->
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        <i class="bi bi-box-seam"></i> Section 2 : Stocks <small class="fw-normal">(repliée par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Cette section offre une vue détaillée des articles dont le stock n'est pas nominalement en ordre.
+                            Elle se divise en deux colonnes côte à côte :
+                        </p>
+
+                        <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Articles Manquants</h6>
+                        <p>
+                            Un tableau listant tous les articles pour lesquels la quantité physique est inférieure
+                            au total théorique. Pour chaque article : son nom, sa catégorie (badge gris),
+                            et la <span class="badge bg-danger">quantité manquante</span> en valeur absolue.
+                        </p>
+
+                        <h6 class="text-warning"><i class="bi bi-truck"></i> Chez Fournisseur</h6>
+                        <p>
+                            Liste tous les articles actuellement en transit chez un fournisseur (statut "Extérieur").
+                            Les articles sont <strong>regroupés par catégorie</strong> dans un sous-accordéon.
+                            Pour chaque article, vous voyez le nom, le ou les fournisseurs associés
+                            (badges bleus, 2 maximum affichés) et la <span class="badge bg-warning text-dark">quantité hors site</span>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- COMMANDES -->
+                <div class="card mb-3 border-info">
+                    <div class="card-header bg-info text-white fw-bold">
+                        <i class="bi bi-cart-check"></i> Section 3 : Statut des Commandes <small class="fw-normal">(repliée par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Cette section liste toutes les commandes fournisseurs non encore réceptionnées,
+                            séparées en deux onglets :
+                        </p>
+
+                        <h6><i class="bi bi-exclamation-triangle text-danger"></i> Onglet "En Retard"</h6>
+                        <p>
+                            Tableau des commandes dont la date de retour attendue est passée.
+                            Chaque ligne affiche : l'ID de commande, le fournisseur, les articles commandés
+                            (jusqu'à 3 affichés, avec un badge "+X" si plus), la date de retour prévue,
+                            le retard en jours et le statut de la commande.
+                            Le badge de retard est <span class="badge bg-danger">rouge</span> au-delà de 7 jours,
+                            <span class="badge bg-warning text-dark">orange</span> en-deçà.
+                        </p>
+
+                        <h6><i class="bi bi-clock text-success"></i> Onglet "En Attente"</h6>
+                        <p>
+                            Tableau des commandes parties chez le fournisseur mais dont la date de retour prévue
+                            n'est pas encore dépassée. Chaque ligne affiche : l'ID, le fournisseur, les articles,
+                            la date de retour attendue et le statut courant de la commande.
+                        </p>
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> <strong>Astuce :</strong> Pour réceptionner une commande visible dans ces onglets,
+                            utilisez le bouton <strong>"Réceptionner une commande"</strong> de la section Actions Rapides en haut de page.
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Section Inventaire -->
             <section id="inventory" class="mb-5">
-                <h3><i class="bi bi-box-seam"></i> Gestion des Stocks (Inventaire)</h3>
-                <p>La gestion des stocks repose sur un principe simple. Chaque article possède :</p>
-                <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th>Type de Quantité</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Quantité Totale</strong></td>
-                            <td>La somme de tout ce que l'établissement possède.</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Disponible</strong></td>
-                            <td>Ce qui est physiquement présent dans vos locaux, prêt à être utilisé.</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Extérieur (Chez le fournisseur)</strong></td>
-                            <td>La quantité envoyée en blanchisserie ou en commande.</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>Le système calcule automatiquement : <code>Total = Disponible + Extérieur</code>.</p>
+                <h3><i class="bi bi-box-seam"></i> Inventaire &amp; Stocks</h3>
                 <p>
-                    Lorsque vous effectuez un <strong>Inventaire</strong>, vous comptez ce qui est physiquement présent. 
-                    Si le total théorique ne correspond pas à la réalité, le système calculera automatiquement les pertes ou les excédents.
+                    La gestion des stocks est accessible via le menu <strong>Gestion du matériel</strong>.
+                    Elle s'articule autour de quatre onglets : <em>Suivi mensuel</em>, <em>Matériels</em>, <em>Commandes</em> et <em>Inventaires</em>.
                 </p>
+
+                <!-- Concepts de base -->
+                <h4 class="mt-4"><i class="bi bi-calculator"></i> Les quantités d'un article</h4>
+                <p>Chaque article dispose de plusieurs compteurs maintenus automatiquement par l'application :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Quantité</th>
+                                <th>Description</th>
+                                <th>Mise à jour par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Totale</strong></td>
+                                <td>Quantité de référence de l'établissement. Sert de base pour détecter les manquants.</td>
+                                <td>Inventaire physique ou import</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Disponible</strong></td>
+                                <td>Quantité physiquement présente sur site, prête à être utilisée.</td>
+                                <td>Mis à jour lors de chaque inventaire ou réception de commande</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hors site (Extérieur)</strong></td>
+                                <td>Quantité actuellement chez le fournisseur (blanchisserie). Augmente à la création d'une commande, diminue à sa réception.</td>
+                                <td>Création / réception de commande</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Excédent</strong></td>
+                                <td>Quantité comptée en surplus lors du dernier inventaire, au-delà du total théorique.</td>
+                                <td>Inventaire physique</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>Manquant</strong> <em>(calculé)</em></td>
+                                <td>
+                                    Différence entre le total théorique et la réalité constatée.<br>
+                                    <code>Manquant = Total − (Disponible + Hors site)</code><br>
+                                    Apparaît dans les alertes du Dashboard si &gt; 0.
+                                </td>
+                                <td>Calculé automatiquement</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    Règle de base : <strong>Total = Disponible + Hors site</strong>.
+                    Tout écart constaté lors d'un inventaire génère des anomalies visibles dans le Dashboard.
+                </div>
+
+                <!-- Onglet Matériels -->
+                <h4 class="mt-4"><i class="bi bi-box-seam"></i> Onglet "Matériels"</h4>
+                <p>
+                    Cet onglet liste l'ensemble des articles, regroupés par catégorie.
+                    Cliquer sur un en-tête de catégorie permet de replier ou déplier le groupe.
+                </p>
+                <p>Le tableau affiche pour chaque article :</p>
+                <ul>
+                    <li><strong>Nom</strong> — intitulé de l'article.</li>
+                    <li><strong>Quantité totale</strong> — stock de référence.</li>
+                    <li><strong>Quantité hors site</strong> — ce qui est chez le fournisseur.</li>
+                    <li><strong>Quantité disponible</strong> — ce qui est sur place.</li>
+                    <li><strong>Fournisseurs</strong> — fournisseurs associés à l'article (badges).</li>
+                    <li><strong>Actions</strong> — boutons pour consulter le détail, modifier l'article (Manager) et exporter cet article en CSV ou Excel.</li>
+                </ul>
+                <p>Les boutons disponibles en haut de l'onglet :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bouton</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">Créer un nouvel item</span></td>
+                                <td>Managers</td>
+                                <td>Ajoute un nouvel article au catalogue.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-outline-success border border-success text-success">Créer une catégorie</span></td>
+                                <td>Managers</td>
+                                <td>Ajoute une nouvelle catégorie d'articles.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary">Exporter</span></td>
+                                <td>Tous</td>
+                                <td>Télécharge la liste complète des articles en CSV (compatible Google Sheets) ou Excel (.xlsx).</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-outline-primary border border-primary text-primary">Importer</span></td>
+                                <td>Managers</td>
+                                <td>Importe des articles depuis un fichier CSV ou Excel. Voir la section <a href="#import-export">Import/Export</a> pour le format attendu.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Onglet Suivi mensuel -->
+                <h4 class="mt-4"><i class="bi bi-calendar-range"></i> Onglet "Suivi mensuel"</h4>
+                <p>
+                    Cet onglet présente un tableau de bord statistique des échanges avec les fournisseurs,
+                    regroupé par mois. Chaque mois est repliable (accordéon) — le plus récent est ouvert par défaut.
+                </p>
+                <p>Pour chaque article (colonnes), les indicateurs suivants sont affichés :</p>
+                <ul>
+                    <li><strong>Quantité totale envoyée</strong> — somme de toutes les quantités expédiées ce mois-ci.</li>
+                    <li><strong>Quantité totale reçue</strong> — somme de toutes les quantités réceptionnées.</li>
+                    <li>
+                        <strong>Différence reçue</strong> — écart entre reçu et envoyé.
+                        En <span class="text-danger fw-bold">rouge</span> si négatif (moins reçu qu'envoyé),
+                        en <span class="text-info fw-bold">bleu</span> si positif.
+                    </li>
+                    <li><strong>Quantité facturée</strong> — quantités inscrites sur les factures fournisseur.</li>
+                    <li><strong>Différence facturé − envoyé</strong> — indique si la facturation correspond aux envois.</li>
+                </ul>
+                <p>Un bouton <strong>Exporter</strong> en haut de l'onglet permet de télécharger ces statistiques en CSV ou Excel.</p>
+
+                <!-- Onglet Inventaires -->
+                <h4 class="mt-4"><i class="bi bi-clipboard-check"></i> Onglet "Inventaires"</h4>
+                <p>
+                    Cet onglet centralise l'historique de tous les inventaires physiques effectués.
+                    Chaque ligne du tableau correspond à un inventaire enregistré et affiche :
+                </p>
+                <ul>
+                    <li><strong>#</strong> — identifiant unique de l'inventaire.</li>
+                    <li><strong>Date de saisie</strong> — date et heure de l'enregistrement.</li>
+                    <li><strong>Créé par</strong> — nom du membre du personnel ayant effectué la saisie.</li>
+                    <li><strong>Articles recensés</strong> — nombre d'articles inclus dans cet inventaire.</li>
+                    <li><strong>Notes</strong> — remarques libres saisies lors de l'inventaire (tronquées à 50 caractères).</li>
+                    <li><strong>Actions</strong> — boutons disponibles par inventaire.</li>
+                </ul>
+                <p>Les actions disponibles sur chaque inventaire :</p>
+                <ul>
+                    <li><strong>Voir</strong> — ouvre une fenêtre modale avec le détail complet (quantités comptées article par article).</li>
+                    <li><strong>Modifier</strong> <em>(Admin / Responsable)</em> — ouvre la page de modification pour corriger les quantités saisies.</li>
+                    <li><strong>Exporter</strong> — télécharge le détail de cet inventaire en CSV ou Excel.</li>
+                </ul>
+                <p>Les boutons en haut de l'onglet permettent également :</p>
+                <ul>
+                    <li><strong>Saisir un inventaire</strong> (Managers) — voir ci-dessous.</li>
+                    <li><strong>Imprimer fiche</strong> — génère une fiche papier vierge pour le comptage terrain (par catégorie ou alphabétique).</li>
+                    <li><strong>Exporter la liste</strong> — exporte le tableau récapitulatif de tous les inventaires (une ligne par inventaire).</li>
+                    <li><strong>Exporter tout le détail</strong> — exporte l'ensemble des lignes de tous les inventaires (une ligne par article par inventaire).</li>
+                </ul>
+
+                <!-- Saisir un inventaire -->
+                <h4 class="mt-4"><i class="bi bi-pencil-square"></i> Saisir un inventaire (Managers)</h4>
+                <p>
+                    La saisie d'un inventaire est accessible depuis le bouton <strong>"Saisir un inventaire"</strong>
+                    disponible à deux endroits : le Dashboard (Actions rapides) et l'onglet Inventaires.
+                    Un formulaire s'ouvre avec tous les articles actifs, organisés par catégorie.
+                </p>
+                <p>Pour chaque article, le formulaire affiche :</p>
+                <ul>
+                    <li><strong>Disponible actuel</strong> — la quantité sur site enregistrée dans la base.</li>
+                    <li><strong>Chez fournisseur</strong> — la quantité actuellement hors site (badge orange si &gt; 0).</li>
+                    <li><strong>Qté comptée (sur site)</strong> — champ de saisie pour entrer la quantité physiquement comptée.</li>
+                </ul>
+                <p>
+                    Après validation, le système met à jour les stocks et détecte automatiquement les anomalies
+                    (manquants ou excédents) qui apparaîtront dans la section Alertes du Dashboard.
+                    Un champ <strong>Notes</strong> optionnel permet d'ajouter des remarques sur la session d'inventaire.
+                </p>
+
+                <!-- Fiche imprimable -->
+                <h4 class="mt-4"><i class="bi bi-printer"></i> Fiche d'inventaire imprimable</h4>
+                <p>
+                    La fiche imprimable est un document optimisé pour l'impression, permettant à vos équipes
+                    de réaliser un comptage terrain avec un support papier.
+                    Elle est accessible depuis le bouton <strong>"Fiche inventaire"</strong> du Dashboard
+                    ou le bouton <strong>"Imprimer fiche"</strong> de l'onglet Inventaires.
+                </p>
+                <p>Elle comporte les colonnes suivantes :</p>
+                <ul>
+                    <li><strong>Article</strong> — nom de l'article.</li>
+                    <li><strong>Catégorie</strong> — visible uniquement en tri alphabétique.</li>
+                    <li><strong>Théorique (Site)</strong> — quantité disponible actuellement enregistrée, pour référence.</li>
+                    <li><strong>Théorique (Fourn.)</strong> — quantité actuellement chez le fournisseur, pour référence.</li>
+                    <li><strong>Stock réel (compté)</strong> — case vide à remplir à la main lors du comptage.</li>
+                </ul>
+                <p>En haut de la fiche, des champs <em>Date</em> et <em>Effectué par</em> sont à compléter à la main. Un bouton <strong>Imprimer</strong> déclenche l'impression directement depuis le navigateur.</p>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> <strong>Conseil :</strong>
+                    Imprimez la fiche avant de commencer le comptage physique. Une fois le comptage terminé sur papier, utilisez le bouton <strong>"Saisir un inventaire"</strong> pour reporter les chiffres dans l'application.
+                </div>
             </section>
 
             <!-- Section Fournisseurs -->
             <section id="suppliers" class="mb-5">
-                <h3><i class="bi bi-truck"></i> Fournisseurs & Commandes</h3>
-                <p>Cette section permet de gérer vos interactions avec les blanchisseries et fournisseurs de matériel.</p>
-                
-                <h4>Cycle de vie d'une commande :</h4>
-                <ol>
-                    <li><strong>Création :</strong> Sélectionnez un fournisseur et ajoutez des articles. Définissez une date de retour prévue.</li>
-                    <li><strong>En attente (Pending) :</strong> La commande est partie. Les articles sont déplacés du stock "Disponible" vers le stock "Extérieur".</li>
-                    <li><strong>Réception :</strong> À la réception, indiquez les quantités reçues. Les articles reviennent dans le stock "Disponible". la commande passe en statut "Terminée".</li>
-                </ol>
+                <h3><i class="bi bi-truck"></i> Fournisseurs &amp; Commandes</h3>
+                <p>
+                    Cette section permet de gérer vos fournisseurs (blanchisseries, prestataires de matériel)
+                    et de suivre intégralement le cycle de vie des commandes.
+                    Elle est accessible depuis le menu <strong>Fournisseurs</strong> de la barre de navigation.
+                </p>
+
+                <!-- Fiche fournisseur -->
+                <h4 class="mt-4"><i class="bi bi-building"></i> Gestion des Fournisseurs</h4>
+                <p>
+                    La page Fournisseurs liste l'ensemble des fournisseurs enregistrés.
+                    Cliquer sur <strong>"Voir"</strong> ouvre une fenêtre modale avec la fiche complète du fournisseur :
+                </p>
+                <ul>
+                    <li><strong>Nom</strong> — raison sociale du fournisseur.</li>
+                    <li><strong>Site web</strong> — lien cliquable vers le site du fournisseur (si renseigné).</li>
+                    <li><strong>Email de contact</strong> — adresse e-mail cliquable (mailto).</li>
+                    <li><strong>Téléphone</strong> — numéro de téléphone.</li>
+                    <li><strong>Adresse</strong> et <strong>Autres détails</strong> — informations complémentaires en texte libre.</li>
+                    <li><strong>Articles associés</strong> — liste des articles que ce fournisseur peut traiter, avec leur catégorie (badge).</li>
+                    <li><strong>Dates</strong> — date de création et de dernière modification de la fiche.</li>
+                </ul>
+                <p>Les actions disponibles sur chaque fournisseur :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Action</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-secondary">Voir</span></td>
+                                <td>Tous</td>
+                                <td>Ouvre la fiche détaillée du fournisseur en fenêtre modale.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">Modifier</span></td>
+                                <td>Admin / Responsable</td>
+                                <td>Ouvre la page de modification : nom, site web, email, téléphone, adresse, notes, articles associés.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">Supprimer</span></td>
+                                <td>Managers</td>
+                                <td>Demande une confirmation avant suppression définitive du fournisseur.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">Ajouter un fournisseur</span></td>
+                                <td>Managers</td>
+                                <td>Ouvre le formulaire de création d'un nouveau fournisseur (nom, coordonnées, articles associés).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Cycle de vie d'une commande -->
+                <h4 class="mt-4"><i class="bi bi-arrow-repeat"></i> Cycle de vie d'une commande</h4>
+                <p>
+                    Une commande représente un envoi d'articles chez un fournisseur (typiquement la blanchisserie).
+                    Son statut évolue automatiquement tout au long du processus :
+                </p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Statut</th>
+                                <th>Signification</th>
+                                <th>Impact sur les stocks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">En attente</span></td>
+                                <td>La commande a été créée et les articles sont partis chez le fournisseur. La date de retour n'est pas encore dépassée.</td>
+                                <td>Les quantités passent de "Disponible" → "Hors site".</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">En retard</span></td>
+                                <td>La date de retour attendue est dépassée et la commande n'a pas encore été réceptionnée. Le statut bascule automatiquement.</td>
+                                <td>Aucun mouvement de stock supplémentaire — les quantités restent "Hors site".</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info text-dark">Terminée / Partielle</span></td>
+                                <td>Une réception a eu lieu mais des articles restent encore chez le fournisseur (quantité reçue &lt; quantité commandée). Un reliquat est automatiquement créé.</td>
+                                <td>Les articles reçus reviennent en "Disponible". Le reliquat reste en "Hors site" dans une nouvelle commande.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">Terminée</span></td>
+                                <td>Tous les articles ont été réceptionnés. La commande est clôturée.</td>
+                                <td>Les quantités reçues reviennent totalement en "Disponible".</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Onglet Commandes -->
+                <h4 class="mt-4"><i class="bi bi-cart-check"></i> Onglet "Commandes" (Gestion du matériel)</h4>
+                <p>
+                    Accessible depuis le menu <strong>Gestion du matériel → onglet Commandes</strong>,
+                    ce tableau liste l'historique complet de toutes les commandes.
+                    Un badge sur l'onglet indique le nombre de commandes en cours (non terminées).
+                </p>
+                <p>Chaque ligne du tableau affiche :</p>
+                <ul>
+                    <li><strong>#</strong> — identifiant unique de la commande.</li>
+                    <li><strong>Fournisseur</strong> — nom du fournisseur destinataire.</li>
+                    <li><strong>Date de commande</strong> — date et heure de création.</li>
+                    <li><strong>Date retour attendue</strong> — date prévue de retour des articles.</li>
+                    <li><strong>Date retour réelle</strong> — date effective de réception (vide si non encore réceptionnée).</li>
+                    <li>
+                        <strong>Statut</strong> — badge coloré indiquant l'état courant
+                        (<span class="badge bg-warning text-dark">En attente</span>,
+                        <span class="badge bg-danger">En retard</span>,
+                        <span class="badge bg-info text-dark">Partielle</span>,
+                        <span class="badge bg-success">Terminée</span>).
+                        Les commandes en "reliquat" affichent une mention entre parenthèses dans le badge.
+                    </li>
+                    <li><strong>Articles</strong> — bouton "Voir (N)" pour consulter le détail des articles dans une modale, avec export CSV/Excel possible.</li>
+                    <li><strong>Actions</strong> — boutons d'action sur la commande.</li>
+                </ul>
+                <p>Les actions disponibles par commande :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Action</th>
+                                <th>Conditions</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">Réceptionner</span></td>
+                                <td>Commande non terminée / non partielle</td>
+                                <td>Ouvre la page de réception (voir ci-dessous).</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">Modifier</span></td>
+                                <td>Tous</td>
+                                <td>Permet de changer le fournisseur, la date de retour prévue et les articles de la commande.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">Supprimer</span></td>
+                                <td>Managers uniquement</td>
+                                <td>Supprime définitivement la commande après confirmation.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary"><i class="bi bi-download"></i></span></td>
+                                <td>Tous</td>
+                                <td>Exporte le détail de cette commande en CSV ou Excel.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Les boutons en haut de l'onglet permettent également d'exporter :</p>
+                <ul>
+                    <li><strong>Exporter la liste</strong> — une ligne par commande (résumé).</li>
+                    <li><strong>Exporter tout le détail</strong> — une ligne par article par commande.</li>
+                </ul>
+
+                <!-- Réception d'une commande -->
+                <h4 class="mt-4"><i class="bi bi-box-arrow-in-down"></i> Réceptionner une commande</h4>
+                <p>
+                    La réception est accessible depuis le bouton <strong>"Réceptionner"</strong> du tableau des commandes
+                    ou depuis le bouton <strong>"Réceptionner une commande"</strong> du Dashboard.
+                </p>
+                <p>
+                    La page de réception affiche le récapitulatif de la commande (fournisseur, date de commande,
+                    date de retour attendue) puis un tableau avec, pour chaque article :
+                </p>
+                <ul>
+                    <li><strong>Commandé</strong> — quantité initialement envoyée (badge gris, non modifiable).</li>
+                    <li><strong>Reçu (Stock)</strong> — champ de saisie pour la quantité physiquement retournée. Par défaut pré-rempli avec la quantité commandée.</li>
+                    <li><strong>Facturé</strong> — champ de saisie pour la quantité inscrite sur la facture fournisseur. Par défaut pré-rempli avec la quantité commandée.</li>
+                    <li>
+                        <strong>Reste fournisseur</strong> — calculé automatiquement en temps réel :
+                        <code>Reste = Commandé − Reçu</code>.
+                        Badge <span class="badge bg-warning text-dark">orange</span> si des articles n'ont pas encore été retournés.
+                        Si ce chiffre est &gt; 0 à la validation, une nouvelle commande "reliquat" est automatiquement créée.
+                    </li>
+                </ul>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Important :</strong>
+                    Si vous réceptionnez une quantité inférieure à ce qui avait été commandé,
+                    le système crée automatiquement une <strong>commande reliquat</strong> pour les articles non retournés.
+                    Celle-ci apparaît dans l'onglet Commandes avec la mention "Reliquat" dans le statut.
+                </div>
+
+                <!-- Création d'une commande -->
+                <h4 class="mt-4"><i class="bi bi-plus-circle"></i> Créer une commande</h4>
+                <p>
+                    La création se fait depuis le bouton <strong>"Créer une commande"</strong> du Dashboard
+                    (fenêtre modale) ou depuis la page Fournisseurs. Le formulaire comporte :
+                </p>
+                <ul>
+                    <li><strong>Fournisseur</strong> — sélection dans la liste des fournisseurs enregistrés (obligatoire).</li>
+                    <li><strong>Date de retour attendue</strong> — date prévue de retour des articles (obligatoire).</li>
+                    <li>
+                        <strong>Articles à commander</strong> — sélecteur organisé par catégorie (accordéon).
+                        Pour chaque article, saisissez une quantité puis cliquez sur <strong>"Ajouter"</strong>.
+                        Les articles ajoutés s'affichent dans un tableau récapitulatif en bas du formulaire
+                        avec la possibilité de les retirer individuellement.
+                    </li>
+                </ul>
+                <p>
+                    À la validation, les quantités commandées sont immédiatement déduites du stock "Disponible"
+                    et ajoutées au stock "Hors site" des articles concernés.
+                </p>
+
             </section>
             
             <!-- Section Utilisateurs -->
             <section id="users" class="mb-5">
                 <h3><i class="bi bi-people"></i> Gestion des Utilisateurs</h3>
-                <p>L'application distingue plusieurs rôles :</p>
+                <p>
+                    La gestion des utilisateurs est accessible depuis le menu <strong>Équipes</strong>
+                    de la barre de navigation. Elle liste l'ensemble du personnel enregistré dans l'application.
+                </p>
+
+                <!-- Rôles -->
+                <h4 class="mt-4"><i class="bi bi-shield-lock"></i> Les rôles</h4>
+                <p>
+                    Chaque compte appartient à l'un des trois rôles suivants. Le rôle détermine
+                    précisément ce que l'utilisateur peut voir et faire dans l'application :
+                </p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Rôle</th>
+                                <th>Nom affiché</th>
+                                <th>Droits &amp; Capacités</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-light">
+                                <td><span class="badge bg-secondary">Équipe</span> <code>CREW</code></td>
+                                <td>Équipe</td>
+                                <td>
+                                    Accès en lecture aux stocks et au dashboard. Peut créer et réceptionner des commandes.
+                                    Ne peut pas gérer les utilisateurs, modifier des articles ou accéder à l'administration.
+                                    Dispose de champs de <strong>dates de contrat</strong> (début / fin) pour le suivi des alertes contrats.
+                                </td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><span class="badge bg-warning text-dark">Responsable</span> <code>DIRECTOR</code></td>
+                                <td>Responsable</td>
+                                <td>
+                                    Accès complet à toutes les fonctionnalités métier : gestion des stocks, saisie d'inventaires,
+                                    gestion des fournisseurs et commandes, création et modification des utilisateurs (Équipe et Responsable).
+                                    Ne peut pas modifier les comptes Admin.
+                                    Peut prolonger les contrats depuis le Dashboard.
+                                </td>
+                            </tr>
+                            <tr class="table-danger">
+                                <td><span class="badge bg-danger">Admin</span> <code>ADMIN</code></td>
+                                <td>Admin</td>
+                                <td>
+                                    Accès total, y compris la gestion des comptes Admin et l'interface d'administration Django.
+                                    Peut créer, modifier et supprimer n'importe quel utilisateur.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    Les rôles <strong>Responsable</strong> et <strong>Admin</strong> sont considérés comme
+                    "Managers" par l'application et ont accès aux actions réservées aux managers (inventaires, création d'articles, etc.).
+                </div>
+
+                <!-- Page Équipes -->
+                <h4 class="mt-4"><i class="bi bi-table"></i> La page "Équipes"</h4>
+                <p>
+                    Le tableau liste tous les comptes, triés par rôle puis par nom d'utilisateur.
+                    Cliquer sur une ligne ouvre la fiche détaillée de l'utilisateur. Les colonnes affichées sont :
+                </p>
                 <ul>
-                    <li><strong>Staff :</strong> Peut consulter les stocks et effectuer des inventaires.</li>
-                    <li><strong>Manager :</strong> A accès à toutes les fonctionnalités, y compris la création de commandes et la gestion des utilisateurs.</li>
-                    <li><strong>Admin :</strong> Accès complet à la configuration technique.</li>
+                    <li><strong>Nom d'utilisateur</strong> — identifiant de connexion.</li>
+                    <li><strong>Rôle</strong> — libellé du rôle (Équipe, Responsable, Admin).</li>
+                    <li><strong>Créé par</strong> — nom de l'utilisateur qui a créé ce compte.</li>
+                    <li><strong>Compte actif</strong> — <span class="badge bg-success">Actif</span> ou <span class="badge bg-secondary">Inactif</span>. Un compte inactif ne peut plus se connecter.</li>
+                    <li><strong>Actions</strong> — boutons d'action selon votre rôle (voir ci-dessous).</li>
                 </ul>
+
+                <!-- Actions disponibles -->
+                <h4 class="mt-4"><i class="bi bi-cursor"></i> Actions disponibles</h4>
+                <p>En cliquant sur une ligne, une fiche détaillée s'ouvre avec les informations complètes :</p>
+                <ul>
+                    <li><strong>Nom d'utilisateur</strong>, <strong>rôle</strong>, <strong>email</strong>, <strong>état du compte</strong> (actif/inactif).</li>
+                    <li><strong>Créé par</strong> — qui a créé ce compte.</li>
+                    <li><strong>Dates de contrat</strong> (début et fin) — visibles uniquement pour les comptes de rôle Équipe.</li>
+                    <li><strong>Date d'inscription</strong> — date et heure de création du compte.</li>
+                </ul>
+                <p>Les boutons d'action dans la colonne Actions varient selon votre propre rôle :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Action</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-primary">Modifier</span></td>
+                                <td>Managers (sur les comptes non-Admin)<br>Admin (sur tous les comptes)</td>
+                                <td>
+                                    Ouvre le formulaire de modification : nom d'utilisateur, email, rôle,
+                                    dates de contrat (début / fin) et état du compte (actif / inactif).
+                                    Désactiver un compte empêche la connexion sans supprimer les données.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">Supprimer</span></td>
+                                <td>Managers (impossible sur son propre compte)</td>
+                                <td>
+                                    Ouvre une fenêtre de confirmation avant suppression définitive.
+                                    <strong>Attention : cette action est irréversible.</strong>
+                                    Il est préférable de désactiver un compte plutôt que de le supprimer.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">Changer mot de passe</span></td>
+                                <td>Tous (sur son propre compte uniquement)</td>
+                                <td>
+                                    Redirige vers la page de changement de mot de passe.
+                                    Nécessite de saisir l'ancien mot de passe puis le nouveau deux fois.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">Créer un nouvel utilisateur</span></td>
+                                <td>Managers</td>
+                                <td>Bouton en haut de la page. Ouvre le formulaire de création (voir ci-dessous).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Créer un utilisateur -->
+                <h4 class="mt-4"><i class="bi bi-person-plus"></i> Créer un utilisateur</h4>
+                <p>
+                    Accessible depuis le bouton <strong>"Créer un nouvel utilisateur"</strong> en haut de la page Équipes.
+                    Le formulaire de création comprend les champs suivants :
+                </p>
+                <ul>
+                    <li><strong>Nom d'utilisateur</strong> — identifiant unique de connexion. Peut contenir des lettres, chiffres, espaces et les caractères <code>@/./+/-/_</code>.</li>
+                    <li><strong>Email</strong> — adresse e-mail (optionnel).</li>
+                    <li><strong>Mot de passe</strong> — à définir à la création. L'utilisateur pourra le modifier ensuite.</li>
+                    <li><strong>Rôle</strong> — Équipe, Responsable ou Admin (selon vos propres droits).</li>
+                    <li><strong>Date début de contrat</strong> et <strong>Date fin de contrat</strong> — pour les membres d'Équipe, ces dates alimentent les alertes contrats du Dashboard.</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> <strong>Conseil :</strong>
+                    Pour les membres du personnel en CDD ou contrat à durée limitée, renseignez toujours la <strong>date de fin de contrat</strong>.
+                    Le Dashboard vous alertera automatiquement lorsque l'échéance approche, avec la possibilité de prolonger directement depuis l'alerte.
+                </div>
+
             </section>
 
             <hr class="my-5">
@@ -173,12 +886,124 @@
             <!-- Section Import/Export -->
             <section id="import-export" class="mb-5">
                 <h3><i class="bi bi-file-earmark-spreadsheet"></i> Import / Export</h3>
-                <p>Pour faciliter la gestion de grandes quantités d'articles ou la migration de données, vous disposez d'un outil d'import/export compatible Excel et CSV.</p>
-                
-                <h5>Structure du Fichier d'Import</h5>
-                <p>Pour que l'import fonctionne, votre fichier doit respecter les colonnes suivantes (l'ordre n'est pas strict mais les noms doivent correspondre) :</p>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
+                <p>
+                    L'application propose des outils d'import et d'export pour faciliter les échanges de données
+                    avec Excel ou Google Sheets. Deux formats sont toujours disponibles :
+                    <strong>CSV</strong> (séparateur <code>;</code>, encodage UTF-8 BOM, compatible Google Sheets)
+                    et <strong>Excel (.xlsx)</strong>.
+                </p>
+
+                <!-- Vue d'ensemble des exports -->
+                <h4 class="mt-4"><i class="bi bi-download"></i> Les exports disponibles</h4>
+                <p>Tous les exports sont accessibles depuis les pages concernées sans configuration particulière :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Données exportées</th>
+                                <th>Où trouver le bouton</th>
+                                <th>Colonnes exportées</th>
+                                <th>Formats</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Articles (Matériels)</strong></td>
+                                <td>Gestion du matériel → onglet Matériels → <em>Exporter</em></td>
+                                <td>
+                                    Nom, Catégorie, Disponible, Hors site, Total, Excédent, Informations,
+                                    Fournisseurs, Date entrée stock, Qté dernier inventaire, Date dernier inventaire
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Commandes — liste</strong></td>
+                                <td>Gestion du matériel → onglet Commandes → <em>Exporter la liste</em></td>
+                                <td>
+                                    #, Fournisseur, Date commande, Retour attendu, Retour réel, Statut, Nb articles, Notes
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Commandes — tout le détail</strong></td>
+                                <td>Gestion du matériel → onglet Commandes → <em>Exporter tout le détail</em></td>
+                                <td>
+                                    Toutes les colonnes de la liste + Article, Catégorie, Qté commandée, Qté reçue, Resté fournisseur
+                                    <br><small class="text-muted">(une ligne par article par commande)</small>
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Détail d'une commande</strong></td>
+                                <td>Gestion du matériel → onglet Commandes → icône <i class="bi bi-download"></i> sur la ligne</td>
+                                <td>
+                                    En-tête de la commande (fournisseur, dates, statut, notes) + Article, Catégorie,
+                                    Qté commandée, Qté reçue, Resté fournisseur
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Inventaires — liste</strong></td>
+                                <td>Gestion du matériel → onglet Inventaires → <em>Exporter la liste</em></td>
+                                <td>#, Date, Créé par, Nb articles, Notes</td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Inventaires — tout le détail</strong></td>
+                                <td>Gestion du matériel → onglet Inventaires → <em>Exporter tout le détail</em></td>
+                                <td>
+                                    Toutes les colonnes de la liste + Catégorie, Article, Sur site, Chez fournisseur, Total
+                                    <br><small class="text-muted">(une ligne par article par inventaire)</small>
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Détail d'un inventaire</strong></td>
+                                <td>Gestion du matériel → onglet Inventaires → icône <i class="bi bi-download"></i> sur la ligne</td>
+                                <td>
+                                    En-tête de l'inventaire (date, auteur, notes) + Catégorie, Article, Sur site,
+                                    Chez fournisseur, Total
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Suivi mensuel</strong></td>
+                                <td>Gestion du matériel → onglet Suivi mensuel → <em>Exporter</em></td>
+                                <td>
+                                    Mois, Article, Catégorie, Envoyé, Reçu, Facturé,
+                                    Différence Reçu, Différence Facturé
+                                    <br><small class="text-muted">(une ligne par article par mois)</small>
+                                </td>
+                                <td>CSV, Excel</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Import articles -->
+                <h4 class="mt-4"><i class="bi bi-upload"></i> Importer des articles <span class="badge bg-warning text-dark">Managers</span></h4>
+                <p>
+                    L'import permet de créer ou mettre à jour en masse des articles depuis un fichier CSV ou Excel.
+                    Accessible depuis <strong>Gestion du matériel → onglet Matériels → Importer</strong>.
+                </p>
+                <p>Le formulaire d'import propose une option :</p>
+                <ul>
+                    <li>
+                        <strong>Mettre à jour les articles existants</strong> — si coché, un article déjà présent
+                        (même nom ET même catégorie) sera mis à jour avec les nouvelles valeurs.
+                        Si non coché, les articles existants sont ignorés et seuls les nouveaux sont créés.
+                    </li>
+                </ul>
+
+                <h5 class="mt-3">Structure du fichier d'import</h5>
+                <p>
+                    Le fichier doit être au format <strong>CSV</strong> (séparateur <code>;</code>, encodage UTF-8)
+                    ou <strong>Excel (.xlsx / .xls)</strong>.
+                    La <strong>première ligne doit contenir les en-têtes</strong> — l'ordre des colonnes n'est pas
+                    imposé mais les noms doivent correspondre exactement (respectez les accents et majuscules).
+                </p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>Colonne</th>
@@ -190,53 +1015,79 @@
                             <tr>
                                 <td><code>Nom</code></td>
                                 <td class="text-success fw-bold">OUI</td>
-                                <td>Identifiant unique de l'article (ex: "Drap Housse 140")</td>
+                                <td>Identifiant unique de l'article (ex : "Drap Housse 140"). Les lignes sans nom sont ignorées.</td>
                             </tr>
                             <tr>
                                 <td><code>Catégorie</code></td>
                                 <td>Non</td>
-                                <td>Crée la catégorie si elle n'existe pas (ex: "Linge de lit")</td>
+                                <td>Nom de la catégorie. La catégorie est créée automatiquement si elle n'existe pas encore. Par défaut : "Sans catégorie".</td>
                             </tr>
                             <tr>
                                 <td><code>Total</code></td>
                                 <td>Non</td>
                                 <td>
-                                    Quantité totale possédée. Si vide, sera calculé : Disponible + Hors site.
-                                    <br><small class="text-muted">Prioritaire si renseigné.</small>
+                                    Quantité totale de référence. Si renseigné, cette valeur est prioritaire.
+                                    Si vide, le total est calculé automatiquement : <code>Disponible + Hors site</code>.
                                 </td>
                             </tr>
                             <tr>
                                 <td><code>Disponible</code></td>
                                 <td>Non</td>
-                                <td>Quantité stockée sur site. (Défaut : 0)</td>
+                                <td>Quantité sur site. Défaut : 0.</td>
                             </tr>
                             <tr>
                                 <td><code>Hors site</code></td>
                                 <td>Non</td>
-                                <td>Quantité chez le fournisseur. (Défaut : 0)</td>
-                            </tr>
-                            <tr>
-                                <td><code>Fournisseurs</code></td>
-                                <td>Non</td>
-                                <td>Noms des fournisseurs séparés par des virgules (ex: "Elis, Metro")</td>
+                                <td>Quantité chez le fournisseur. Défaut : 0.</td>
                             </tr>
                             <tr>
                                 <td><code>Excédent</code></td>
                                 <td>Non</td>
-                                <td>Quantité excédentaire relevée.</td>
+                                <td>Quantité excédentaire. Défaut : 0.</td>
                             </tr>
                             <tr>
                                 <td><code>Informations</code></td>
                                 <td>Non</td>
-                                <td>Texte libre.</td>
+                                <td>Note libre associée à l'article.</td>
+                            </tr>
+                            <tr>
+                                <td><code>Fournisseurs</code></td>
+                                <td>Non</td>
+                                <td>Noms des fournisseurs séparés par des virgules (ex : "Elis, Metro"). Les fournisseurs doivent exister préalablement dans l'application.</td>
+                            </tr>
+                            <tr>
+                                <td><code>Date entrée stock</code></td>
+                                <td>Non</td>
+                                <td>Format <code>DD/MM/YYYY</code> en CSV, ou date Excel standard.</td>
+                            </tr>
+                            <tr>
+                                <td><code>Qté dernier inventaire</code></td>
+                                <td>Non</td>
+                                <td>Quantité relevée lors du dernier inventaire physique.</td>
+                            </tr>
+                            <tr>
+                                <td><code>Date dernier inventaire</code></td>
+                                <td>Non</td>
+                                <td>Format <code>DD/MM/YYYY HH:MM</code> en CSV, ou datetime Excel standard.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="alert alert-light border">
-                    <i class="bi bi-lightbulb"></i> <strong>Astuce :</strong> La méthode la plus simple pour obtenir un modèle de fichier valide est de faire d'abord un <strong>Export Excel</strong> depuis l'onglet Matériels, de le vider, puis de le remplir.
+                    <i class="bi bi-lightbulb"></i> <strong>Astuce :</strong>
+                    La méthode la plus simple pour obtenir un fichier valide est d'effectuer d'abord un
+                    <strong>Export Excel</strong> depuis l'onglet Matériels, de vider les lignes de données
+                    (en conservant la ligne d'en-têtes), puis de remplir avec vos nouvelles valeurs.
+                    Cela garantit que les noms de colonnes sont exactement corrects.
                 </div>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Attention :</strong>
+                    Les fournisseurs renseignés dans la colonne <code>Fournisseurs</code> doivent
+                    <strong>déjà exister</strong> dans l'application — ils ne sont pas créés automatiquement à l'import.
+                    Créez-les au préalable depuis la page <strong>Fournisseurs</strong>.
+                </div>
+
             </section>
             
             <hr class="my-5">
@@ -254,9 +1105,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre Email</label>
+                        <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre email <span class="text-muted fw-normal">(optionnel)</span></label>
                         {{ form.sender }}
-                        <div class="form-text">Ce champ sera ajouté au corps du message.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label fw-bold">Votre téléphone <span class="text-muted fw-normal">(optionnel)</span></label>
+                        {{ form.phone }}
+                        <div class="form-text">Indiquez au moins un moyen de vous contacter (email ou téléphone).</div>
                     </div>
 
                     <div class="mb-3">
@@ -275,24 +1131,31 @@
 
                 <script>
                     function sendSupportEmail() {
-                        // Récupération des valeurs via les ID générés par Django (id_nomduchamp)
                         const subjectInput = document.getElementById('id_subject');
                         const senderInput = document.getElementById('id_sender');
+                        const phoneInput = document.getElementById('id_phone');
                         const messageInput = document.getElementById('id_message');
 
                         const subject = subjectInput ? subjectInput.value : '';
                         const sender = senderInput ? senderInput.value : '';
+                        const phone = phoneInput ? phoneInput.value : '';
                         const message = messageInput ? messageInput.value : '';
-                        
+
                         if (!subject || !message) {
                             alert("Merci de renseigner un sujet et un message.");
+                            return;
+                        }
+                        if (!sender && !phone) {
+                            alert("Merci de renseigner au moins un moyen de contact (email ou téléphone).");
                             return;
                         }
 
                         const recipient = 'clscipion@gmail.com';
                         const finalSubject = encodeURIComponent(`[Support LW] ${subject}`);
-                        // On inclut l'expéditeur dans le corps du message car mailto l'utilise comme "From" (le client mail de l'utilisateur)
-                        const finalBody = encodeURIComponent(`De: ${sender}\n\nMessage:\n${message}`);
+                        let contact = '';
+                        if (sender) contact += `Email: ${sender}\n`;
+                        if (phone) contact += `Téléphone: ${phone}\n`;
+                        const finalBody = encodeURIComponent(`${contact}\nMessage:\n${message}`);
 
                         window.location.href = `mailto:${recipient}?subject=${finalSubject}&body=${finalBody}`;
                     }

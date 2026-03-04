@@ -1,5 +1,7 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+
+from .decorators import role_required
 
 
 @login_required
@@ -13,12 +15,11 @@ def logout_view(request):
     return redirect('login')
 
 
-from .decorators import role_required
-
 @role_required(['ADMIN', 'DIRECTOR'])
 def create_user(request):
-    from .forms import CustomUserCreationForm
     from django.contrib import messages
+
+    from .forms import CustomUserCreationForm
 
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, current_user=request.user)
@@ -46,9 +47,10 @@ def create_user(request):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def change_user(request, user_id):
+    from django.contrib import messages
+
     from .forms import CustomUserChangeForm
     from .models import User
-    from django.contrib import messages
 
     user = User.objects.get(id=user_id)
 
@@ -89,8 +91,9 @@ def change_user(request, user_id):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_user(request, user_id):
-    from .models import User
     from django.contrib import messages
+
+    from .models import User
 
     user = User.objects.get(id=user_id)
 
@@ -119,20 +122,22 @@ def delete_user(request, user_id):
 @login_required
 def change_password(request):
     """Permet à l'utilisateur connecté de modifier son mot de passe."""
-    from django.contrib.auth.forms import PasswordChangeForm
-    from django.contrib.auth import update_session_auth_hash
     from django.contrib import messages
+    from django.contrib.auth import update_session_auth_hash
+    from django.contrib.auth.forms import PasswordChangeForm
 
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important pour ne pas déconnecter l'utilisateur
-            messages.success(request, 'Votre mot de passe a été mis à jour avec succès!')
+            # Important pour ne pas déconnecter l'utilisateur
+            update_session_auth_hash(request, user)
+            messages.success(
+                request, 'Votre mot de passe a été mis à jour avec succès!')
             return redirect('staff_management')
         else:
-            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
+            messages.error(
+                request, 'Veuillez corriger les erreurs ci-dessous.')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'change_password.html', {'form': form})
-

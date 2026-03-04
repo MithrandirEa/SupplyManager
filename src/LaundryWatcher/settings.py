@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 if getattr(sys, 'frozen', False):
@@ -101,7 +101,7 @@ if getattr(sys, 'frozen', False):
     # Fallback to executable dir if APPDATA not set (unlikely on Windows).
     app_data_dir = Path(os.environ.get('APPDATA')) / 'SupplyManager'
     app_data_dir.mkdir(parents=True, exist_ok=True)
-    
+
     db_path = app_data_dir / 'db.sqlite3'
     log_path = app_data_dir / 'debug.log'
 
@@ -111,7 +111,7 @@ if getattr(sys, 'frozen', False):
             'NAME': db_path,
         }
     }
-    
+
     # Configure logging to catch errors in production
     # Force creation of log file
     try:
@@ -153,20 +153,20 @@ if getattr(sys, 'frozen', False):
             # Root logger to catch everything
             '': {
                 'handlers': ['file_debug'],
-                'level': 'INFO', # Get info level logs too
+                'level': 'INFO',  # Get info level logs too
             },
         },
     }
-    
+
 # FINAL DEBUGGING CONFIGURATION
 if getattr(sys, 'frozen', False):
     DEBUG = True
     ALLOWED_HOSTS = ['*']
-    
+
     # Logging setup
     app_data_dir = Path(os.environ.get('APPDATA')) / 'SupplyManager'
     log_path = app_data_dir / 'runtime_error.log'
-    
+
     # Ensure log file exists
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -301,4 +301,3 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = 'votre_email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'votre_mot_de_passe_app'
 # DEFAULT_FROM_EMAIL = 'LaundryWatcher <noreply@laundrywatcher.com>'
-

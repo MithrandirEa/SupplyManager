@@ -1,8 +1,8 @@
-from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from authentication.decorators import role_required
+from django.shortcuts import redirect, render
 
-from supplier.forms import Supplier, ChangeSupplierForm, CreateSupplierForm
+from authentication.decorators import role_required
+from supplier.forms import ChangeSupplierForm, CreateSupplierForm, Supplier
 from supply.models import Item
 
 
@@ -69,15 +69,17 @@ def delete_supplier(request, supplier_id):
 @login_required
 def change_order(request, order_id):
     """Vue pour modifier une commande"""
-    from supplier.models import Order
-    from supplier.forms import ChangeOrderForm
-    from django.contrib import messages
-    from supply.models import Item, ItemsCategory
-    from collections import defaultdict
     import json
-    
+    from collections import defaultdict
+
+    from django.contrib import messages
+
+    from supplier.forms import ChangeOrderForm
+    from supplier.models import Order
+    from supply.models import Item, ItemsCategory
+
     order = Order.objects.get(id=order_id)
-    
+
     if request.method == 'POST':
         form = ChangeOrderForm(request.POST, instance=order)
         if form.is_valid():
@@ -86,17 +88,17 @@ def change_order(request, order_id):
             return redirect('supplies_management')
     else:
         form = ChangeOrderForm(instance=order)
-    
+
     # Récupérer tous les items groupés par catégorie
     items_by_category = defaultdict(list)
     all_items = Item.objects.filter(
         is_available=True
     ).select_related('category').order_by('category__name', 'name')
-    
+
     for item in all_items:
         category_name = item.category.name if item.category else "Sans catégorie"
         items_by_category[category_name].append(item)
-    
+
     # Récupérer les items actuels de la commande
     current_items = []
     for order_item in order.order_items.all():
@@ -105,7 +107,7 @@ def change_order(request, order_id):
             'item_name': order_item.item.name,
             'quantity': order_item.quantity
         })
-    
+
     return render(request, 'change_order.html', {
         'form': form,
         'order': order,
@@ -117,13 +119,15 @@ def change_order(request, order_id):
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_order(request, order_id):
     """Vue pour supprimer une commande"""
-    from supplier.models import Order
     from django.contrib import messages
-    
+
+    from supplier.models import Order
+
     order = Order.objects.get(id=order_id)
     order.delete()
     messages.success(request, 'Commande supprimée avec succès.')
     return redirect('supplies_management')
+
 
 @login_required
 def receive_order(request, order_id):
@@ -132,9 +136,10 @@ def receive_order(request, order_id):
     l'utilisateur saisit la quantité reçue pour chaque article.
     Les articles non reçus sont signalés comme restés chez le fournisseur.
     """
-    from supplier.models import Order
     from django.contrib import messages
     from django.utils import timezone
+
+    from supplier.models import Order
 
     order = Order.objects.prefetch_related(
         'order_items__item'
@@ -153,7 +158,7 @@ def receive_order(request, order_id):
         for oi in order_items:
             key_recv = f'received_qty_{oi.id}'
             key_inv = f'invoiced_qty_{oi.id}'
-            
+
             raw_recv = request.POST.get(key_recv, '').strip()
             raw_inv = request.POST.get(key_inv, '').strip()
 
@@ -165,7 +170,7 @@ def receive_order(request, order_id):
                     raise ValueError("Quantité reçue négative")
                 if invoiced < 0:
                     raise ValueError("Quantité facturée négative")
-                    
+
                 if received > oi.quantity:
                     errors.append(
                         f"{oi.item.name} : la quantité reçue ({received}) "
@@ -195,11 +200,11 @@ def receive_order(request, order_id):
                     'item': oi.item,
                     'quantity': remaining
                 })
-            
+
             item = oi.item
 
             # Mettre à jour les stocks
-            # NOTE: On ne décrémente que ce qui a été reçu. 
+            # NOTE: On ne décrémente que ce qui a été reçu.
             # Le reste (reliquat) reste comptabilisé comme "chez le fournisseur" (outside_quantity)
             # jusqu'à ce qu'il soit reçu via la nouvelle commande de reliquat.
             item.available_quantity += received
@@ -214,24 +219,25 @@ def receive_order(request, order_id):
         # Créer une commande reliquat si nécessaire
         if backorder_items:
             from datetime import timedelta
-            
+
             original_date = order.order_date.strftime('%d/%m/%Y')
-            
+
             # Message de reliquat standardisé
             reliquat_msg = f"Reliquat commande #{order.id}"
-            
+
             backorder = Order.objects.create(
                 supplier=order.supplier,
                 created_by=request.user,
                 order_date=timezone.now(),
-                expected_return_date=order.expected_return_date, # Garder la date originale ou +7 jours ? +7 semble logique pour un retard
+                # Garder la date originale ou +7 jours ? +7 semble logique pour un retard
+                expected_return_date=order.expected_return_date,
                 status='pending',
                 notes=f"{reliquat_msg} du {original_date}",
-                # On utilise le champ notes pour stocker l'info, 
+                # On utilise le champ notes pour stocker l'info,
                 # mais l'utilisateur veut voir "En attente (reliquat...)" en statut.
                 # On va modifier l'affichage dans le template plutôt que de corrompre le champ status
             )
-            
+
             from supplier.models import OrderItem
             for item_data in backorder_items:
                 OrderItem.objects.create(
@@ -239,9 +245,9 @@ def receive_order(request, order_id):
                     item=item_data['item'],
                     quantity=item_data['quantity']
                 )
-            
+
             messages.warning(
-                request, 
+                request,
                 f"Une nouvelle commande (#{backorder.id}) a été créée pour les {len(backorder_items)} articles manquants."
             )
 
@@ -250,7 +256,7 @@ def receive_order(request, order_id):
             order.status = 'partial'
         else:
             order.status = 'completed'
-            
+
         order.actual_return_date = timezone.now().date()
         order.save(update_fields=['status', 'actual_return_date'])
 

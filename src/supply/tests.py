@@ -1,7 +1,10 @@
 from django.test import TestCase
 from django.utils import timezone
-from .models import ItemsCategory, Item, Inventory, InventoryEntry
+
 from authentication.models import User
+
+from .models import Inventory, InventoryEntry, Item, ItemsCategory
+
 
 class ItemsCategoryTest(TestCase):
     def setUp(self):
@@ -9,6 +12,7 @@ class ItemsCategoryTest(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.category), "Detergents")
+
 
 class ItemModelTest(TestCase):
     def setUp(self):
@@ -68,15 +72,19 @@ class ItemModelTest(TestCase):
     def test_str(self):
         self.assertEqual(str(self.item), "Bed Sheet")
 
+
 class InventoryTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="inv_user", password="password", role="staff")
+        self.user = User.objects.create_user(
+            username="inv_user", password="password", role="staff")
         self.category = ItemsCategory.objects.create(name="General")
-        self.item = Item.objects.create(name="Towel", category=self.category, total_quantity=100)
+        self.item = Item.objects.create(
+            name="Towel", category=self.category, total_quantity=100)
 
     def test_inventory_creation(self):
         """Test basic inventory creation."""
-        inventory = Inventory.objects.create(created_by=self.user, notes="Monthly Check")
+        inventory = Inventory.objects.create(
+            created_by=self.user, notes="Monthly Check")
         self.assertEqual(inventory.created_by, self.user)
         self.assertEqual(inventory.notes, "Monthly Check")
         self.assertIsNotNone(inventory.created_at)
@@ -85,12 +93,13 @@ class InventoryTest(TestCase):
         # Because created_at is auto_now_add, we rely on the object's string representation
         expected_str_part = "Inventaire du"
         self.assertIn(expected_str_part, str(inventory))
-        self.assertIn(inventory.created_at.strftime('%d/%m/%Y'), str(inventory))
+        self.assertIn(inventory.created_at.strftime(
+            '%d/%m/%Y'), str(inventory))
 
     def test_inventory_entry_logic(self):
         """Manually create an Inventory and InventoryEntry."""
         inventory = Inventory.objects.create(created_by=self.user)
-        
+
         # Create an entry
         counted = 50
         outside = 5
@@ -114,4 +123,3 @@ class InventoryTest(TestCase):
         # "Towel : 50 (+ 5 fournisseur)"
         expected_str = f"Towel : {counted} (+ {outside} fournisseur)"
         self.assertEqual(str(entry), expected_str)
-

@@ -5,6 +5,8 @@ register = Library()
 
 def is_manager(user):
     return user.is_authenticated and user.role in ['ADMIN', 'DIRECTOR']
+
+
 register.filter('is_manager', is_manager)
 
 

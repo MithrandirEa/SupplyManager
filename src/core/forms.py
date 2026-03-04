@@ -3,10 +3,12 @@ Formulaires pour les actions rapides du dashboard
 """
 import json
 from datetime import date
+
 from django import forms
 from django.utils import timezone
-from supply.models import Item, Inventory, InventoryEntry
+
 from authentication.models import User
+from supply.models import Inventory, InventoryEntry, Item
 
 
 class BulkInventoryForm(forms.Form):
@@ -54,14 +56,14 @@ class BulkInventoryForm(forms.Form):
                 raise forms.ValidationError(
                     f"Article introuvable (id={item_id})."
                 )
-            
+
             cleaned_item = {
-                'item': item, 
+                'item': item,
                 'quantity': quantity
             }
             if outside_quantity is not None:
                 cleaned_item['outside_quantity'] = int(outside_quantity)
-                
+
             cleaned.append(cleaned_item)
         return cleaned
 
@@ -85,7 +87,7 @@ class BulkInventoryForm(forms.Form):
         for entry in entries:
             item = entry['item']
             counted = entry['quantity']
-            
+
             # Détermination de outside_quantity
             if 'outside_quantity' in entry:
                 outside = entry['outside_quantity']
@@ -104,11 +106,11 @@ class BulkInventoryForm(forms.Form):
             # Sinon, en mode auto, on suppose qu'il n'a pas bougé (ou géré ailleurs)
             if 'outside_quantity' in entry:
                 item.outside_quantity = outside
-                
+
             item.total_quantity = counted + outside
             item.last_inventory_quantity = counted
             item.last_inventory_date = now
-            
+
             update_fields = [
                 'available_quantity',
                 'total_quantity',
@@ -117,7 +119,7 @@ class BulkInventoryForm(forms.Form):
             ]
             if 'outside_quantity' in entry:
                 update_fields.append('outside_quantity')
-                
+
             item.save(update_fields=update_fields)
 
         return inventory
@@ -225,12 +227,12 @@ class InventoryUpdateForm(forms.Form):
         """Enregistre l'inventaire pour l'article"""
         item_id = self.cleaned_data['item_id']
         quantity = self.cleaned_data['last_inventory_quantity']
-        
+
         item = Item.objects.get(pk=item_id)
         item.last_inventory_quantity = quantity
         item.last_inventory_date = date.today()
         item.save()
-        
+
         return item
 
 
@@ -267,33 +269,59 @@ class ContractExtensionForm(forms.Form):
         """Met à jour la date de fin de contrat et réactive le compte si nécessaire"""
         user_id = self.cleaned_data['user_id']
         new_date = self.cleaned_data['new_end_date']
-        
+
         user = User.objects.get(pk=user_id)
         user.date_end_contract = new_date
-        
+
         # Réactiver automatiquement le compte si la date est dans le futur
         if new_date >= date.today():
             user.still_active = True
-        
+
         user.save()
-        
+
         return user
+
 
 class ContactForm(forms.Form):
     '''
     Formulaire de contact pour l'aide et le support.
     '''
-    subject = forms.CharField(
-        max_length=100,
+    SUBJECT_CHOICES = [
+        ('', '— Choisissez un sujet —'),
+        ('Bug / Erreur', 'Bug / Erreur'),
+        ('Question fonctionnelle', 'Question fonctionnelle'),
+        ('Problème de connexion / Accès', 'Problème de connexion / Accès'),
+        ('Demande d\'amélioration', 'Demande d\'amélioration'),
+        ('Autre', 'Autre'),
+    ]
+
+    subject = forms.ChoiceField(
+        choices=SUBJECT_CHOICES,
         label='Sujet',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bugg ou question...'})
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     sender = forms.EmailField(
         label='Votre email',
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'votre.email@example.com'})
+        required=False,
+        widget=forms.EmailInput(
+            attrs={'class': 'form-control', 'placeholder': 'votre.email@example.com'})
+    )
+    phone = forms.CharField(
+        label='Votre téléphone',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': '+33 6 00 00 00 00'})
     )
     message = forms.CharField(
         label='Message',
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'D�crivez votre probl�me ici...'})
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5,
+                              'placeholder': 'Décrivez votre problème ici...'})
     )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get('sender') and not cleaned_data.get('phone'):
+            raise forms.ValidationError(
+                "Veuillez renseigner au moins un moyen de contact (email ou téléphone)."
+            )
+        return cleaned_data
