@@ -61,6 +61,36 @@ def check_for_updates():
     except Exception as e:
         print(f"Update check failed: {e}")
 
+def check_update_success():
+    """
+    Vérifie au démarrage si la version a changé (indiquant une mise à jour réussie)
+    en comparant avec la dernière version connue stockée dans AppData.
+    """
+    try:
+        # On utilise le même dossier APPDATA que pour la DB
+        app_data_dir = Path(os.environ.get('APPDATA')) / 'SupplyManager'
+        app_data_dir.mkdir(parents=True, exist_ok=True)
+        version_file = app_data_dir / 'last_version.txt'
+
+        last_known_version = "0.0.0"
+        if version_file.exists():
+            last_known_version = version_file.read_text(encoding='utf-8').strip()
+        
+        # Si la version actuelle est différente de la dernière connue
+        if __version__ != last_known_version:
+            # On affiche le message de succès SEULEMENT si on avait déjà une version installée (pas 0.0.0)
+            # Cela évite le message à la toute première installation
+            if last_known_version != "0.0.0":
+                 msg = f"Mise à jour installée avec succès !\n\nVous utilisez maintenant la version {__version__}."
+                 # 0x40 = Info icon, 0 = OK button
+                 ctypes.windll.user32.MessageBoxW(0, msg, "SupplyManager - Mis à jour", 0x40)
+
+            # On met à jour le fichier pour le prochain lancement
+            version_file.write_text(__version__, encoding='utf-8')
+            
+    except Exception as e:
+        print(f"Update success check failed: {e}")
+
 def open_browser():
     # Only open browser if not already running (simple check, or just always open)
     webbrowser.open('http://127.0.0.1:8000')
@@ -142,6 +172,9 @@ if __name__ == '__main__':
 
         # Open browser after a short delay
         Timer(1.5, open_browser).start()
+        
+        # Check if we just updated (Show Success Message)
+        Timer(2.0, check_update_success).start()
 
         # Start update check in background (after browser opens)
         # Check updates only if frozen (production) or forced
