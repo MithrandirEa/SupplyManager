@@ -2,3 +2,17 @@
 __pycache__/
 ROADMAP.md
 *.sqlite3s
+
+# --- Ajouts recommandés ---
+
+# Dossiers de compilation PyInstaller
+build/
+dist/
+*.spec
+
+# Dossier de sortie de l'installateur (défini dans setup_script.iss)
+Output/
+
+# Fichiers temporaires
+temp_forms_content.txt
+temp_forms_supply.txt

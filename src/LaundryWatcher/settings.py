@@ -11,9 +11,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -23,9 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*1u+7)8@cbfnm_!$cz2k3-atlqfi2*39xzwgd4fpgzgk1(yh0k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+if getattr(sys, 'frozen', False):
+    DEBUG = False
+    ALLOWED_HOSTS = ['*']
+else:
+    DEBUG = True
+    ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -48,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,12 +95,129 @@ WSGI_APPLICATION = 'LaundryWatcher.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if getattr(sys, 'frozen', False):
+    # Determine a writable directory for data (Database and Logs)
+    # We use %APPDATA%/SupplyManager normally.
+    # Fallback to executable dir if APPDATA not set (unlikely on Windows).
+    app_data_dir = Path(os.environ.get('APPDATA')) / 'SupplyManager'
+    app_data_dir.mkdir(parents=True, exist_ok=True)
+    
+    db_path = app_data_dir / 'db.sqlite3'
+    log_path = app_data_dir / 'debug.log'
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': db_path,
+        }
     }
-}
+    
+    # Configure logging to catch errors in production
+    # Force creation of log file
+    try:
+        if not log_path.exists():
+            log_path.touch()
+    except Exception:
+        pass
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'file': {
+                'level': 'ERROR',
+                'class': 'logging.FileHandler',
+                'filename': str(log_path),
+                'formatter': 'verbose',
+            },
+            # Add a catch-all specific handler
+            'file_debug': {
+                'level': 'DEBUG',
+                'class': 'logging.FileHandler',
+                'filename': str(log_path),
+                'formatter': 'verbose',
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['file'],
+                'level': 'ERROR',
+                'propagate': True,
+            },
+            # Root logger to catch everything
+            '': {
+                'handlers': ['file_debug'],
+                'level': 'INFO', # Get info level logs too
+            },
+        },
+    }
+    
+# FINAL DEBUGGING CONFIGURATION
+if getattr(sys, 'frozen', False):
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']
+    
+    # Logging setup
+    app_data_dir = Path(os.environ.get('APPDATA')) / 'SupplyManager'
+    log_path = app_data_dir / 'runtime_error.log'
+    
+    # Ensure log file exists
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(log_path, 'a') as f:
+            f.write("\n--- NEW SESSION ---\n")
+    except Exception:
+        pass
+
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {name} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'file': {
+                'level': 'DEBUG',
+                'class': 'logging.FileHandler',
+                'filename': str(log_path),
+                'formatter': 'verbose',
+                'mode': 'a',
+            },
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            }
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            '': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+            }
+        },
+    }
+else:
+    # Development settings
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Email configuration (Development)
@@ -136,7 +262,17 @@ CRISPY_ALLOW_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+if getattr(sys, 'frozen', False):
+    STATIC_ROOT = BASE_DIR / 'static'
+    # Use simple storage to avoid 500 errors if manifest is missing or mismatch
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    # When frozen, we don't use STATICFILES_DIRS, preventing conflict with STATIC_ROOT
+    STATICFILES_DIRS = []
+else:
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files
 MEDIA_URL = '/media/'

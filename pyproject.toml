@@ -1,5 +1,5 @@
 [project]
-name = "laundrywatcher"
+name = "supplymanager"
 version = "0.1.1"
 description = "Logiciel de gestion du linge en hotelerie."
 authors = [

@@ -1,0 +1,13 @@
+.transition-icon {
+    transition: transform 0.3s ease-in-out;
+}
+
+[aria-expanded="false"] .transition-icon {
+    transform: rotate(-90deg);
+}
+
+tbody[data-bs-toggle="collapse"] td {
+    border-bottom: 0;
+}
+
+
