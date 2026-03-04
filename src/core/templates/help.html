@@ -100,15 +100,220 @@
             <!-- Section Dashboard -->
             <section id="dashboard" class="mb-5">
                 <h3><i class="bi bi-speedometer2"></i> Le Dashboard</h3>
-                <p>Le tableau de bord est votre point d'entrée principal. Il vous offre une vue synthétique des indicateurs clés :</p>
+                <p>
+                    Le tableau de bord est la page d'accueil de l'application. Il centralise en un seul écran toutes les informations
+                    critiques : alertes actives, état des stocks et suivi des commandes en cours. Chaque section est repliable pour
+                    vous permettre de vous concentrer sur ce qui compte.
+                </p>
+
+                <!-- En-tête -->
+                <h4 class="mt-4"><i class="bi bi-badge-wc"></i> Indicateur global d'alertes</h4>
+                <p>
+                    En haut à droite de la page, un <strong>badge coloré</strong> indique en un coup d'œil l'état général :
+                </p>
                 <ul>
-                    <li><strong>Articles en alerte :</strong> Liste des articles dont le stock disponible est critique.</li>
-                    <li><strong>Commandes en cours :</strong> Suivi des commandes envoyées aux fournisseurs mais non encore réceptionnées.</li>
-                    <li><strong>Commandes en retard :</strong> Alertes sur les commandes dont la date de retour prévue est dépassée.</li>
+                    <li><span class="badge bg-danger">N alerte(s)</span> — il existe des anomalies nécessitant votre attention (stocks, commandes, contrats).</li>
+                    <li><span class="badge bg-success">Aucune alerte</span> — tout est en ordre, aucune action urgente n'est requise.</li>
                 </ul>
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> <strong>Astuce :</strong> Utilisez les boutons d'actions rapides pour créer une commande ou mettre à jour un inventaire sans changer de page.
+
+                <!-- Actions rapides -->
+                <h4 class="mt-4"><i class="bi bi-lightning-charge"></i> Actions Rapides</h4>
+                <p>
+                    En dessous de l'en-tête, une barre d'actions vous permet d'effectuer les opérations courantes
+                    <strong>sans quitter le Dashboard</strong>, via des fenêtres modales :
+                </p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bouton</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-primary fs-6"><i class="bi bi-plus-circle"></i> Créer une commande</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Ouvre un formulaire pour créer une nouvelle commande fournisseur. Sélectionnez le fournisseur,
+                                    renseignez une date de retour attendue, puis ajoutez les articles souhaités
+                                    (organisés par catégorie) avec leurs quantités. Les articles ajoutés passent immédiatement
+                                    de "Disponible" à "Extérieur" dans les stocks.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success fs-6"><i class="bi bi-box-arrow-in-down"></i> Réceptionner une commande</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Ouvre la liste des commandes en attente de réception. Un badge indique
+                                    le nombre de commandes concernées. Sélectionnez une commande et saisissez les quantités
+                                    effectivement reçues — les articles reviennent dans le stock "Disponible" et la commande
+                                    passe au statut "Terminée".
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info text-white fs-6"><i class="bi bi-clipboard-check"></i> Saisir un inventaire</span></td>
+                                <td><strong>Managers uniquement</strong></td>
+                                <td>
+                                    Ouvre un formulaire de saisie d'inventaire physique. Entrez les quantités comptées
+                                    sur site pour chaque article. Le système recalcule le stock disponible et
+                                    détecte automatiquement les écarts (manquants ou excédents) par rapport aux quantités
+                                    théoriques.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary fs-6"><i class="bi bi-printer"></i> Fiche inventaire</span></td>
+                                <td>Tous</td>
+                                <td>
+                                    Génère et ouvre dans un nouvel onglet une fiche inventaire imprimable. Un menu déroulant
+                                    vous permet de choisir l'ordre de tri :
+                                    <ul class="mb-0 mt-1">
+                                        <li><strong>Par catégorie</strong> — articles regroupés par famille.</li>
+                                        <li><strong>Ordre alphabétique</strong> — articles dans l'ordre A → Z.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Sections accordion -->
+                <h4 class="mt-4"><i class="bi bi-layout-accordion-collapsed"></i> Les 3 sections du tableau de bord</h4>
+                <p>
+                    Le Dashboard est organisé en trois sections repliables (accordéon). Chaque en-tête affiche un
+                    badge résumant le nombre d'éléments concernés.
+                </p>
+
+                <!-- ALERTES -->
+                <div class="card mb-3 border-danger">
+                    <div class="card-header bg-danger text-white fw-bold">
+                        <i class="bi bi-bell"></i> Section 1 : Alertes <small class="fw-normal">(ouverte par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>Cette section regroupe toutes les anomalies actives, réparties en trois sous-parties :</p>
+
+                        <h6><i class="bi bi-box-seam-fill text-danger"></i> Anomalies de Stock</h6>
+                        <p>
+                            Signale les articles dont les quantités réelles s'écartent des quantités théoriques
+                            constatées lors du dernier inventaire :
+                        </p>
+                        <ul>
+                            <li>
+                                <span class="badge bg-danger">Manquant : X</span> — l'inventaire physique révèle un
+                                <strong>déficit</strong> par rapport au stock théorique. Cela peut indiquer des pertes
+                                ou une erreur de comptage.
+                            </li>
+                            <li>
+                                <span class="badge bg-warning text-dark">Excès : X</span> — le comptage physique révèle
+                                un <strong>surplus</strong>, ce qui peut indiquer des articles non enregistrés ou revenus sans
+                                avoir été réceptionnés.
+                            </li>
+                        </ul>
+                        <p>Chaque ligne affiche le nom de l'article, sa catégorie et un message explicatif.</p>
+
+                        <hr>
+
+                        <h6><i class="bi bi-truck text-danger"></i> Anomalies de Commande</h6>
+                        <p>
+                            Liste les commandes fournisseurs dont la <strong>date de retour attendue est dépassée</strong>.
+                            Pour chaque commande en retard, vous voyez :
+                        </p>
+                        <ul>
+                            <li>Le numéro de commande et le nom du fournisseur concerné.</li>
+                            <li>La date à laquelle le retour était attendu.</li>
+                            <li>
+                                Le nombre de jours de retard :
+                                <span class="badge bg-danger">rouge</span> si le retard dépasse 7 jours,
+                                <span class="badge bg-warning text-dark">orange</span> sinon.
+                            </li>
+                        </ul>
+
+                        <hr>
+
+                        <h6><i class="bi bi-person-x text-danger"></i> Alertes Contrats (Crew)</h6>
+                        <p>
+                            Surveille les contrats des membres du personnel arrivant à expiration prochainement.
+                            Pour chaque alerte :
+                        </p>
+                        <ul>
+                            <li>Le nom d'utilisateur et le rôle de la personne concernée.</li>
+                            <li>La date de fin de contrat.</li>
+                            <li>
+                                Le nombre de jours restants :
+                                <span class="badge bg-danger">rouge</span> si le contrat expire très prochainement,
+                                <span class="badge bg-warning text-dark">orange</span> si l'échéance approche.
+                            </li>
+                            <li>
+                                Un bouton <strong>"Prolonger"</strong> permet d'ouvrir directement la fenêtre de
+                                modification de la date de fin de contrat sans quitter le Dashboard.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- STOCKS -->
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        <i class="bi bi-box-seam"></i> Section 2 : Stocks <small class="fw-normal">(repliée par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Cette section offre une vue détaillée des articles dont le stock n'est pas nominalement en ordre.
+                            Elle se divise en deux colonnes côte à côte :
+                        </p>
+
+                        <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Articles Manquants</h6>
+                        <p>
+                            Un tableau listant tous les articles pour lesquels la quantité physique est inférieure
+                            au total théorique. Pour chaque article : son nom, sa catégorie (badge gris),
+                            et la <span class="badge bg-danger">quantité manquante</span> en valeur absolue.
+                        </p>
+
+                        <h6 class="text-warning"><i class="bi bi-truck"></i> Chez Fournisseur</h6>
+                        <p>
+                            Liste tous les articles actuellement en transit chez un fournisseur (statut "Extérieur").
+                            Les articles sont <strong>regroupés par catégorie</strong> dans un sous-accordéon.
+                            Pour chaque article, vous voyez le nom, le ou les fournisseurs associés
+                            (badges bleus, 2 maximum affichés) et la <span class="badge bg-warning text-dark">quantité hors site</span>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- COMMANDES -->
+                <div class="card mb-3 border-info">
+                    <div class="card-header bg-info text-white fw-bold">
+                        <i class="bi bi-cart-check"></i> Section 3 : Statut des Commandes <small class="fw-normal">(repliée par défaut)</small>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Cette section liste toutes les commandes fournisseurs non encore réceptionnées,
+                            séparées en deux onglets :
+                        </p>
+
+                        <h6><i class="bi bi-exclamation-triangle text-danger"></i> Onglet "En Retard"</h6>
+                        <p>
+                            Tableau des commandes dont la date de retour attendue est passée.
+                            Chaque ligne affiche : l'ID de commande, le fournisseur, les articles commandés
+                            (jusqu'à 3 affichés, avec un badge "+X" si plus), la date de retour prévue,
+                            le retard en jours et le statut de la commande.
+                            Le badge de retard est <span class="badge bg-danger">rouge</span> au-delà de 7 jours,
+                            <span class="badge bg-warning text-dark">orange</span> en-deçà.
+                        </p>
+
+                        <h6><i class="bi bi-clock text-success"></i> Onglet "En Attente"</h6>
+                        <p>
+                            Tableau des commandes parties chez le fournisseur mais dont la date de retour prévue
+                            n'est pas encore dépassée. Chaque ligne affiche : l'ID, le fournisseur, les articles,
+                            la date de retour attendue et le statut courant de la commande.
+                        </p>
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> <strong>Astuce :</strong> Pour réceptionner une commande visible dans ces onglets,
+                            utilisez le bouton <strong>"Réceptionner une commande"</strong> de la section Actions Rapides en haut de page.
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Section Inventaire -->
