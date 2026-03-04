@@ -2,6 +2,7 @@
 __pycache__/
 ROADMAP.md
 *.sqlite3s
+db.sqlite3
 
 # --- Ajouts recommandés ---
 

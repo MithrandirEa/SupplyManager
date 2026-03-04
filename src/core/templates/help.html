@@ -318,35 +318,202 @@
 
             <!-- Section Inventaire -->
             <section id="inventory" class="mb-5">
-                <h3><i class="bi bi-box-seam"></i> Gestion des Stocks (Inventaire)</h3>
-                <p>La gestion des stocks repose sur un principe simple. Chaque article possède :</p>
-                <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th>Type de Quantité</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Quantité Totale</strong></td>
-                            <td>La somme de tout ce que l'établissement possède.</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Disponible</strong></td>
-                            <td>Ce qui est physiquement présent dans vos locaux, prêt à être utilisé.</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Extérieur (Chez le fournisseur)</strong></td>
-                            <td>La quantité envoyée en blanchisserie ou en commande.</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>Le système calcule automatiquement : <code>Total = Disponible + Extérieur</code>.</p>
+                <h3><i class="bi bi-box-seam"></i> Inventaire &amp; Stocks</h3>
                 <p>
-                    Lorsque vous effectuez un <strong>Inventaire</strong>, vous comptez ce qui est physiquement présent. 
-                    Si le total théorique ne correspond pas à la réalité, le système calculera automatiquement les pertes ou les excédents.
+                    La gestion des stocks est accessible via le menu <strong>Gestion du matériel</strong>.
+                    Elle s'articule autour de quatre onglets : <em>Suivi mensuel</em>, <em>Matériels</em>, <em>Commandes</em> et <em>Inventaires</em>.
                 </p>
+
+                <!-- Concepts de base -->
+                <h4 class="mt-4"><i class="bi bi-calculator"></i> Les quantités d'un article</h4>
+                <p>Chaque article dispose de plusieurs compteurs maintenus automatiquement par l'application :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Quantité</th>
+                                <th>Description</th>
+                                <th>Mise à jour par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Totale</strong></td>
+                                <td>Quantité de référence de l'établissement. Sert de base pour détecter les manquants.</td>
+                                <td>Inventaire physique ou import</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Disponible</strong></td>
+                                <td>Quantité physiquement présente sur site, prête à être utilisée.</td>
+                                <td>Mis à jour lors de chaque inventaire ou réception de commande</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hors site (Extérieur)</strong></td>
+                                <td>Quantité actuellement chez le fournisseur (blanchisserie). Augmente à la création d'une commande, diminue à sa réception.</td>
+                                <td>Création / réception de commande</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Excédent</strong></td>
+                                <td>Quantité comptée en surplus lors du dernier inventaire, au-delà du total théorique.</td>
+                                <td>Inventaire physique</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>Manquant</strong> <em>(calculé)</em></td>
+                                <td>
+                                    Différence entre le total théorique et la réalité constatée.<br>
+                                    <code>Manquant = Total − (Disponible + Hors site)</code><br>
+                                    Apparaît dans les alertes du Dashboard si &gt; 0.
+                                </td>
+                                <td>Calculé automatiquement</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    Règle de base : <strong>Total = Disponible + Hors site</strong>.
+                    Tout écart constaté lors d'un inventaire génère des anomalies visibles dans le Dashboard.
+                </div>
+
+                <!-- Onglet Matériels -->
+                <h4 class="mt-4"><i class="bi bi-box-seam"></i> Onglet "Matériels"</h4>
+                <p>
+                    Cet onglet liste l'ensemble des articles, regroupés par catégorie.
+                    Cliquer sur un en-tête de catégorie permet de replier ou déplier le groupe.
+                </p>
+                <p>Le tableau affiche pour chaque article :</p>
+                <ul>
+                    <li><strong>Nom</strong> — intitulé de l'article.</li>
+                    <li><strong>Quantité totale</strong> — stock de référence.</li>
+                    <li><strong>Quantité hors site</strong> — ce qui est chez le fournisseur.</li>
+                    <li><strong>Quantité disponible</strong> — ce qui est sur place.</li>
+                    <li><strong>Fournisseurs</strong> — fournisseurs associés à l'article (badges).</li>
+                    <li><strong>Actions</strong> — boutons pour consulter le détail, modifier l'article (Manager) et exporter cet article en CSV ou Excel.</li>
+                </ul>
+                <p>Les boutons disponibles en haut de l'onglet :</p>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Bouton</th>
+                                <th>Qui peut l'utiliser ?</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">Créer un nouvel item</span></td>
+                                <td>Managers</td>
+                                <td>Ajoute un nouvel article au catalogue.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-outline-success border border-success text-success">Créer une catégorie</span></td>
+                                <td>Managers</td>
+                                <td>Ajoute une nouvelle catégorie d'articles.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary">Exporter</span></td>
+                                <td>Tous</td>
+                                <td>Télécharge la liste complète des articles en CSV (compatible Google Sheets) ou Excel (.xlsx).</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-outline-primary border border-primary text-primary">Importer</span></td>
+                                <td>Managers</td>
+                                <td>Importe des articles depuis un fichier CSV ou Excel. Voir la section <a href="#import-export">Import/Export</a> pour le format attendu.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Onglet Suivi mensuel -->
+                <h4 class="mt-4"><i class="bi bi-calendar-range"></i> Onglet "Suivi mensuel"</h4>
+                <p>
+                    Cet onglet présente un tableau de bord statistique des échanges avec les fournisseurs,
+                    regroupé par mois. Chaque mois est repliable (accordéon) — le plus récent est ouvert par défaut.
+                </p>
+                <p>Pour chaque article (colonnes), les indicateurs suivants sont affichés :</p>
+                <ul>
+                    <li><strong>Quantité totale envoyée</strong> — somme de toutes les quantités expédiées ce mois-ci.</li>
+                    <li><strong>Quantité totale reçue</strong> — somme de toutes les quantités réceptionnées.</li>
+                    <li>
+                        <strong>Différence reçue</strong> — écart entre reçu et envoyé.
+                        En <span class="text-danger fw-bold">rouge</span> si négatif (moins reçu qu'envoyé),
+                        en <span class="text-info fw-bold">bleu</span> si positif.
+                    </li>
+                    <li><strong>Quantité facturée</strong> — quantités inscrites sur les factures fournisseur.</li>
+                    <li><strong>Différence facturé − envoyé</strong> — indique si la facturation correspond aux envois.</li>
+                </ul>
+                <p>Un bouton <strong>Exporter</strong> en haut de l'onglet permet de télécharger ces statistiques en CSV ou Excel.</p>
+
+                <!-- Onglet Inventaires -->
+                <h4 class="mt-4"><i class="bi bi-clipboard-check"></i> Onglet "Inventaires"</h4>
+                <p>
+                    Cet onglet centralise l'historique de tous les inventaires physiques effectués.
+                    Chaque ligne du tableau correspond à un inventaire enregistré et affiche :
+                </p>
+                <ul>
+                    <li><strong>#</strong> — identifiant unique de l'inventaire.</li>
+                    <li><strong>Date de saisie</strong> — date et heure de l'enregistrement.</li>
+                    <li><strong>Créé par</strong> — nom du membre du personnel ayant effectué la saisie.</li>
+                    <li><strong>Articles recensés</strong> — nombre d'articles inclus dans cet inventaire.</li>
+                    <li><strong>Notes</strong> — remarques libres saisies lors de l'inventaire (tronquées à 50 caractères).</li>
+                    <li><strong>Actions</strong> — boutons disponibles par inventaire.</li>
+                </ul>
+                <p>Les actions disponibles sur chaque inventaire :</p>
+                <ul>
+                    <li><strong>Voir</strong> — ouvre une fenêtre modale avec le détail complet (quantités comptées article par article).</li>
+                    <li><strong>Modifier</strong> <em>(Admin / Responsable)</em> — ouvre la page de modification pour corriger les quantités saisies.</li>
+                    <li><strong>Exporter</strong> — télécharge le détail de cet inventaire en CSV ou Excel.</li>
+                </ul>
+                <p>Les boutons en haut de l'onglet permettent également :</p>
+                <ul>
+                    <li><strong>Saisir un inventaire</strong> (Managers) — voir ci-dessous.</li>
+                    <li><strong>Imprimer fiche</strong> — génère une fiche papier vierge pour le comptage terrain (par catégorie ou alphabétique).</li>
+                    <li><strong>Exporter la liste</strong> — exporte le tableau récapitulatif de tous les inventaires (une ligne par inventaire).</li>
+                    <li><strong>Exporter tout le détail</strong> — exporte l'ensemble des lignes de tous les inventaires (une ligne par article par inventaire).</li>
+                </ul>
+
+                <!-- Saisir un inventaire -->
+                <h4 class="mt-4"><i class="bi bi-pencil-square"></i> Saisir un inventaire (Managers)</h4>
+                <p>
+                    La saisie d'un inventaire est accessible depuis le bouton <strong>"Saisir un inventaire"</strong>
+                    disponible à deux endroits : le Dashboard (Actions rapides) et l'onglet Inventaires.
+                    Un formulaire s'ouvre avec tous les articles actifs, organisés par catégorie.
+                </p>
+                <p>Pour chaque article, le formulaire affiche :</p>
+                <ul>
+                    <li><strong>Disponible actuel</strong> — la quantité sur site enregistrée dans la base.</li>
+                    <li><strong>Chez fournisseur</strong> — la quantité actuellement hors site (badge orange si &gt; 0).</li>
+                    <li><strong>Qté comptée (sur site)</strong> — champ de saisie pour entrer la quantité physiquement comptée.</li>
+                </ul>
+                <p>
+                    Après validation, le système met à jour les stocks et détecte automatiquement les anomalies
+                    (manquants ou excédents) qui apparaîtront dans la section Alertes du Dashboard.
+                    Un champ <strong>Notes</strong> optionnel permet d'ajouter des remarques sur la session d'inventaire.
+                </p>
+
+                <!-- Fiche imprimable -->
+                <h4 class="mt-4"><i class="bi bi-printer"></i> Fiche d'inventaire imprimable</h4>
+                <p>
+                    La fiche imprimable est un document optimisé pour l'impression, permettant à vos équipes
+                    de réaliser un comptage terrain avec un support papier.
+                    Elle est accessible depuis le bouton <strong>"Fiche inventaire"</strong> du Dashboard
+                    ou le bouton <strong>"Imprimer fiche"</strong> de l'onglet Inventaires.
+                </p>
+                <p>Elle comporte les colonnes suivantes :</p>
+                <ul>
+                    <li><strong>Article</strong> — nom de l'article.</li>
+                    <li><strong>Catégorie</strong> — visible uniquement en tri alphabétique.</li>
+                    <li><strong>Théorique (Site)</strong> — quantité disponible actuellement enregistrée, pour référence.</li>
+                    <li><strong>Théorique (Fourn.)</strong> — quantité actuellement chez le fournisseur, pour référence.</li>
+                    <li><strong>Stock réel (compté)</strong> — case vide à remplir à la main lors du comptage.</li>
+                </ul>
+                <p>En haut de la fiche, des champs <em>Date</em> et <em>Effectué par</em> sont à compléter à la main. Un bouton <strong>Imprimer</strong> déclenche l'impression directement depuis le navigateur.</p>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> <strong>Conseil :</strong>
+                    Imprimez la fiche avant de commencer le comptage physique. Une fois le comptage terminé sur papier, utilisez le bouton <strong>"Saisir un inventaire"</strong> pour reporter les chiffres dans l'application.
+                </div>
             </section>
 
             <!-- Section Fournisseurs -->
