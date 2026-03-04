@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "SupplyManager"
-#define MyAppVersion "0.1.1"
+#define MyAppVersion "1.0.0"
 #define MyAppPublisher "Clement SCIPION"
 #define MyAppExeName "SupplyManager.exe"
 
