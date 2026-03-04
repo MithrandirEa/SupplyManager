@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Item, ItemsCategory, Inventory, InventoryEntry
+
+from .models import Inventory, InventoryEntry, Item, ItemsCategory
 
 
 @admin.register(Item)

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Supplier, Order, OrderItem
+
+from .models import Order, OrderItem, Supplier
 
 
 @admin.register(Supplier)

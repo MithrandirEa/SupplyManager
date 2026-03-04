@@ -1,6 +1,7 @@
+from datetime import date
+
 from django.db import models
 from django.utils import timezone
-from datetime import date
 
 
 class Supplier(models.Model):
@@ -24,14 +25,14 @@ class Supplier(models.Model):
 
 class Order(models.Model):
     """Modèle représentant une commande/envoi chez un fournisseur"""
-    
+
     STATUS_CHOICES = [
         ('pending', 'En attente'),
         ('delayed', 'En retard'),
         ('completed', 'Terminée'),
         ('partial', 'Terminée/partielle'),
     ]
-    
+
     supplier = models.ForeignKey(
         Supplier,
         on_delete=models.CASCADE,
@@ -76,9 +77,11 @@ class Order(models.Model):
         verbose_name_plural = "Commandes"
         ordering = ['-order_date']
         indexes = [
-            models.Index(fields=['expected_return_date'], name='order_exp_ret_idx'),
+            models.Index(fields=['expected_return_date'],
+                         name='order_exp_ret_idx'),
             models.Index(fields=['status'], name='order_status_idx'),
-            models.Index(fields=['supplier', 'status'], name='order_sup_status_idx'),
+            models.Index(fields=['supplier', 'status'],
+                         name='order_sup_status_idx'),
             models.Index(fields=['-order_date'], name='order_date_idx'),
             models.Index(
                 fields=['status', 'expected_return_date'],
@@ -118,7 +121,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     """Modèle intermédiaire pour les items d'une commande"""
-    
+
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,

@@ -1,8 +1,10 @@
-from django.contrib.auth.models import AbstractUser, Group, UserManager as BaseUserManager
+import re
+
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import UserManager as BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from django.conf import settings
-import re
 
 
 class UsernameWithSpacesValidator(UnicodeUsernameValidator):
@@ -90,7 +92,8 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=['role'], name='user_role_idx'),
             models.Index(fields=['still_active'], name='user_active_idx'),
-            models.Index(fields=['date_end_contract'], name='user_end_contract_idx'),
+            models.Index(fields=['date_end_contract'],
+                         name='user_end_contract_idx'),
             models.Index(
                 fields=['role', 'still_active'],
                 name='user_role_active_idx'
@@ -106,10 +109,10 @@ class User(AbstractUser):
         created_by_user = kwargs.pop('created_by_user', None)
         if created_by_user and not self.pk and not self.created_by:
             self.created_by = created_by_user
-        
+
         # Synchroniser is_active avec still_active
         self.is_active = self.still_active
-        
+
         super().save(*args, **kwargs)
 
         # Ajout automatique au groupe selon le rôle

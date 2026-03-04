@@ -1,5 +1,7 @@
 from django import forms
+
 from .models import Item, ItemsCategory
+
 
 class CreateCategoryForm(forms.ModelForm):
     class Meta:
@@ -11,6 +13,7 @@ class CreateCategoryForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'})
         }
+
 
 class CreateItemForm(forms.ModelForm):
     class Meta:
@@ -123,10 +126,12 @@ class BuyItemForm(forms.ModelForm):
             ),
         }
 
+
 class ImportItemsForm(forms.Form):
     import_file = forms.FileField(
         label="Fichier d'import (CSV ou Excel)",
-        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv, .xlsx, .xls'})
+        widget=forms.FileInput(
+            attrs={'class': 'form-control', 'accept': '.csv, .xlsx, .xls'})
     )
     update_existing = forms.BooleanField(
         label="Mettre à jour les articles existants (basé sur le nom)",

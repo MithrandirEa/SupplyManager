@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='supplier',
             name='associated_items',
-            field=models.ManyToManyField(blank=True, related_name='supplier_set', to='supply.item'),
+            field=models.ManyToManyField(
+                blank=True, related_name='supplier_set', to='supply.item'),
         ),
     ]

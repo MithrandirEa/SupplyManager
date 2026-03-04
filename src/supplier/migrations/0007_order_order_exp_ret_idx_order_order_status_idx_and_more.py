@@ -14,7 +14,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='order',
-            index=models.Index(fields=['expected_return_date'], name='order_exp_ret_idx'),
+            index=models.Index(
+                fields=['expected_return_date'], name='order_exp_ret_idx'),
         ),
         migrations.AddIndex(
             model_name='order',
@@ -22,7 +23,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='order',
-            index=models.Index(fields=['supplier', 'status'], name='order_sup_status_idx'),
+            index=models.Index(
+                fields=['supplier', 'status'], name='order_sup_status_idx'),
         ),
         migrations.AddIndex(
             model_name='order',
@@ -30,6 +32,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='order',
-            index=models.Index(fields=['status', 'expected_return_date'], name='order_status_date_idx'),
+            index=models.Index(
+                fields=['status', 'expected_return_date'], name='order_status_date_idx'),
         ),
     ]

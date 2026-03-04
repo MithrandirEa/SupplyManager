@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='role',
-            field=models.CharField(choices=[('ADMIN', 'Admin'), ('DIRECTOR', 'Responsable'), ('CREW', 'Équipe')], default='CREW', max_length=30),
+            field=models.CharField(choices=[('ADMIN', 'Admin'), ('DIRECTOR', 'Responsable'),
+                                   ('CREW', 'Équipe')], default='CREW', max_length=30),
         ),
     ]

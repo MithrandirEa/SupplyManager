@@ -7,17 +7,21 @@ MONTHLY_STATS_HEADERS = [
     'Différence Reçu', 'Différence Facturé'
 ]
 
+
 def _monthly_stats_rows():
-    from supplier.models import OrderItem
-    from supply.models import Item
-    from django.db.models import Sum
-    from django.db.models.functions import TruncMonth, Coalesce
     from collections import defaultdict
 
+    from django.db.models import Sum
+    from django.db.models.functions import Coalesce, TruncMonth
+
+    from supplier.models import OrderItem
+    from supply.models import Item
+
     # 1. Tous les items (disponibles)
-    items = Item.objects.filter(is_available=True).select_related('category').order_by('category__name', 'name')
+    items = Item.objects.filter(is_available=True).select_related(
+        'category').order_by('category__name', 'name')
     items_dict = {i.id: i for i in items}
-    
+
     # 2. Stats
     raw_stats = OrderItem.objects.annotate(
         month=TruncMonth('order__order_date')
@@ -30,7 +34,7 @@ def _monthly_stats_rows():
     # 3. Grouper par mois
     grouped_stats = defaultdict(dict)
     months = set()
-    
+
     for stat in raw_stats:
         m = stat['month']
         if m:
@@ -38,16 +42,17 @@ def _monthly_stats_rows():
             grouped_stats[m][stat['item']] = stat
 
     sorted_months = sorted(list(months), reverse=True)
-    
+
     rows = []
     for m in sorted_months:
         month_str = m.strftime('%B %Y').capitalize()
         for item in items:
-            stats = grouped_stats[m].get(item.id, {'sent': 0, 'received': 0, 'invoiced': 0})
+            stats = grouped_stats[m].get(
+                item.id, {'sent': 0, 'received': 0, 'invoiced': 0})
             s = stats['sent']
             r = stats['received']
             i = stats['invoiced']
-            
+
             rows.append([
                 month_str,
                 item.name,
@@ -60,12 +65,14 @@ def _monthly_stats_rows():
             ])
     return rows
 
+
 def export_monthly_stats_csv():
     response, writer = _csv_response('suivi_mensuel.csv')
     writer.writerow(MONTHLY_STATS_HEADERS)
     for row in _monthly_stats_rows():
         writer.writerow(row)
     return response
+
 
 def export_monthly_stats_excel():
     import openpyxl

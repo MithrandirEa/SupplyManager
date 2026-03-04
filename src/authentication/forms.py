@@ -1,5 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+
 from .models import User
 
 
@@ -72,7 +73,7 @@ class CustomUserChangeForm(UserChangeForm):
                 field.widget.attrs['class'] = 'form-select'
             else:
                 field.widget.attrs['class'] = 'form-control'
-    
+
     def clean(self):
         cleaned_data = super().clean()
         role = cleaned_data.get('role')
@@ -98,19 +99,19 @@ class CustomUserChangeForm(UserChangeForm):
 
     def save(self, commit=True):
         from datetime import date
-        
+
         user = super().save(commit=False)
-        
+
         # Logique de réactivation automatique si le contrat est prolongé
         if user.role == User.CREW and user.date_end_contract:
             # Si la date de fin de contrat est dans le futur,
             # réactiver automatiquement le compte
             if user.date_end_contract >= date.today():
                 user.still_active = True
-        
+
         if commit:
             user.save()
-        
+
         return user
 
     class Meta:

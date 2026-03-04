@@ -13,7 +13,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='user',
-            options={'verbose_name': 'Utilisateur', 'verbose_name_plural': 'Utilisateurs'},
+            options={'verbose_name': 'Utilisateur',
+                     'verbose_name_plural': 'Utilisateurs'},
         ),
         migrations.AddIndex(
             model_name='user',
@@ -21,18 +22,22 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='user',
-            index=models.Index(fields=['still_active'], name='user_active_idx'),
+            index=models.Index(fields=['still_active'],
+                               name='user_active_idx'),
         ),
         migrations.AddIndex(
             model_name='user',
-            index=models.Index(fields=['date_end_contract'], name='user_end_contract_idx'),
+            index=models.Index(
+                fields=['date_end_contract'], name='user_end_contract_idx'),
         ),
         migrations.AddIndex(
             model_name='user',
-            index=models.Index(fields=['role', 'still_active'], name='user_role_active_idx'),
+            index=models.Index(
+                fields=['role', 'still_active'], name='user_role_active_idx'),
         ),
         migrations.AddIndex(
             model_name='user',
-            index=models.Index(fields=['role', 'date_end_contract'], name='user_role_contract_idx'),
+            index=models.Index(
+                fields=['role', 'date_end_contract'], name='user_role_contract_idx'),
         ),
     ]

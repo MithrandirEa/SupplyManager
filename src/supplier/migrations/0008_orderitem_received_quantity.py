@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderitem',
             name='received_quantity',
-            field=models.PositiveIntegerField(blank=True, help_text='Rempli lors de la réception de la commande', null=True, verbose_name='Quantité reçue'),
+            field=models.PositiveIntegerField(
+                blank=True, help_text='Rempli lors de la réception de la commande', null=True, verbose_name='Quantité reçue'),
         ),
     ]

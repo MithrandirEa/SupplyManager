@@ -17,17 +17,17 @@ Including another URLconf
 
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path, include
+from django.urls import include, path
 
 import authentication.views
 import core.views
-import supply.views
 import supplier.views
+import supply.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('dashboard/', core.views.dashboard, name='dashboard'),
-    
+
     # Actions rapides AJAX du dashboard
     path(
         'dashboard/create-order/',
@@ -44,7 +44,7 @@ urlpatterns = [
         core.views.extend_contract_ajax,
         name='extend_contract_ajax'
     ),
-    
+
     # Page d'aide
     path('help/', core.views.help_view, name='help'),
 
@@ -54,10 +54,10 @@ urlpatterns = [
         redirect_authenticated_user=True),
         name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
-    
+
     path(
-        'change-password/', 
-        authentication.views.change_password, 
+        'change-password/',
+        authentication.views.change_password,
         name='change_password'
     ),
 
@@ -151,11 +151,16 @@ urlpatterns = [
     # Routes d'export
     path('export/items/', core.views.export_items, name='export_items'),
     path('export/orders/', core.views.export_orders, name='export_orders'),
-    path('export/orders/<int:order_id>/', core.views.export_order, name='export_order'),
-    path('export/inventories/', core.views.export_inventories, name='export_inventories'),
-    path('export/inventories/<int:inventory_id>/', core.views.export_inventory, name='export_inventory'),
-    path('export/monthly-stats/', core.views.export_monthly_stats, name='export_monthly_stats'),
+    path('export/orders/<int:order_id>/',
+         core.views.export_order, name='export_order'),
+    path('export/inventories/', core.views.export_inventories,
+         name='export_inventories'),
+    path('export/inventories/<int:inventory_id>/',
+         core.views.export_inventory, name='export_inventory'),
+    path('export/monthly-stats/', core.views.export_monthly_stats,
+         name='export_monthly_stats'),
 
     # Impression fiche inventaire
-    path('print-inventory-sheet/', core.views.print_inventory_sheet, name='print_inventory_sheet'),
+    path('print-inventory-sheet/', core.views.print_inventory_sheet,
+         name='print_inventory_sheet'),
 ]

@@ -13,16 +13,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='item',
             name='excess_quantity',
-            field=models.PositiveIntegerField(default=0, help_text='Quantité excédentaire'),
+            field=models.PositiveIntegerField(
+                default=0, help_text='Quantité excédentaire'),
         ),
         migrations.AddField(
             model_name='item',
             name='last_inventory_date',
-            field=models.DateTimeField(blank=True, help_text='Date du dernier inventaire', null=True),
+            field=models.DateTimeField(
+                blank=True, help_text='Date du dernier inventaire', null=True),
         ),
         migrations.AddField(
             model_name='item',
             name='last_inventory_quantity',
-            field=models.PositiveIntegerField(default=0, help_text='Quantité lors du dernier inventaire'),
+            field=models.PositiveIntegerField(
+                default=0, help_text='Quantité lors du dernier inventaire'),
         ),
     ]

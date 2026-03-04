@@ -15,30 +15,37 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='item',
-            options={'ordering': ['name'], 'verbose_name': 'Article', 'verbose_name_plural': 'Articles'},
+            options={'ordering': [
+                'name'], 'verbose_name': 'Article', 'verbose_name_plural': 'Articles'},
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['available_quantity'], name='item_avail_qty_idx'),
+            index=models.Index(
+                fields=['available_quantity'], name='item_avail_qty_idx'),
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['outside_quantity'], name='item_out_qty_idx'),
+            index=models.Index(
+                fields=['outside_quantity'], name='item_out_qty_idx'),
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['excess_quantity'], name='item_excess_qty_idx'),
+            index=models.Index(
+                fields=['excess_quantity'], name='item_excess_qty_idx'),
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['is_available'], name='item_is_avail_idx'),
+            index=models.Index(fields=['is_available'],
+                               name='item_is_avail_idx'),
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['category', 'name'], name='item_cat_name_idx'),
+            index=models.Index(
+                fields=['category', 'name'], name='item_cat_name_idx'),
         ),
         migrations.AddIndex(
             model_name='item',
-            index=models.Index(fields=['-created_at'], name='item_created_idx'),
+            index=models.Index(fields=['-created_at'],
+                               name='item_created_idx'),
         ),
     ]
