@@ -52,5 +52,18 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 [UninstallDelete]
 ; Force deletion of the installation directory and all its contents (including leftovers)
 Type: filesandordirs; Name: "{app}"
-; Also remove the data directory in AppData (Database, Logs) to ensure a clean removal
-Type: filesandordirs; Name: "{userappdata}\{#MyAppName}"
+
+[Code]
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    // Only delete user data on full uninstall (not during upgrade)
+    // Ask the user for confirmation before deleting their data
+    if MsgBox('Voulez-vous supprimer toutes les données de l''application (base de données, logs) ?',
+              mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      DelTree(ExpandConstant('{userappdata}\{#MyAppName}'), True, True, True);
+    end;
+  end;
+end;
