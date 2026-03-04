@@ -1105,9 +1105,14 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre Email</label>
+                        <label for="{{ form.sender.id_for_label }}" class="form-label fw-bold">Votre email <span class="text-muted fw-normal">(optionnel)</span></label>
                         {{ form.sender }}
-                        <div class="form-text">Ce champ sera ajouté au corps du message.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label fw-bold">Votre téléphone <span class="text-muted fw-normal">(optionnel)</span></label>
+                        {{ form.phone }}
+                        <div class="form-text">Indiquez au moins un moyen de vous contacter (email ou téléphone).</div>
                     </div>
 
                     <div class="mb-3">
@@ -1126,24 +1131,31 @@
 
                 <script>
                     function sendSupportEmail() {
-                        // Récupération des valeurs via les ID générés par Django (id_nomduchamp)
                         const subjectInput = document.getElementById('id_subject');
                         const senderInput = document.getElementById('id_sender');
+                        const phoneInput = document.getElementById('id_phone');
                         const messageInput = document.getElementById('id_message');
 
                         const subject = subjectInput ? subjectInput.value : '';
                         const sender = senderInput ? senderInput.value : '';
+                        const phone = phoneInput ? phoneInput.value : '';
                         const message = messageInput ? messageInput.value : '';
-                        
+
                         if (!subject || !message) {
                             alert("Merci de renseigner un sujet et un message.");
+                            return;
+                        }
+                        if (!sender && !phone) {
+                            alert("Merci de renseigner au moins un moyen de contact (email ou téléphone).");
                             return;
                         }
 
                         const recipient = 'clscipion@gmail.com';
                         const finalSubject = encodeURIComponent(`[Support LW] ${subject}`);
-                        // On inclut l'expéditeur dans le corps du message car mailto l'utilise comme "From" (le client mail de l'utilisateur)
-                        const finalBody = encodeURIComponent(`De: ${sender}\n\nMessage:\n${message}`);
+                        let contact = '';
+                        if (sender) contact += `Email: ${sender}\n`;
+                        if (phone) contact += `Téléphone: ${phone}\n`;
+                        const finalBody = encodeURIComponent(`${contact}\nMessage:\n${message}`);
 
                         window.location.href = `mailto:${recipient}?subject=${finalSubject}&body=${finalBody}`;
                     }

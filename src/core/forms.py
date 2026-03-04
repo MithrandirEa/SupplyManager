@@ -283,17 +283,40 @@ class ContactForm(forms.Form):
     '''
     Formulaire de contact pour l'aide et le support.
     '''
-    subject = forms.CharField(
-        max_length=100,
+    SUBJECT_CHOICES = [
+        ('', '— Choisissez un sujet —'),
+        ('Bug / Erreur', 'Bug / Erreur'),
+        ('Question fonctionnelle', 'Question fonctionnelle'),
+        ('Problème de connexion / Accès', 'Problème de connexion / Accès'),
+        ('Demande d\'amélioration', 'Demande d\'amélioration'),
+        ('Autre', 'Autre'),
+    ]
+
+    subject = forms.ChoiceField(
+        choices=SUBJECT_CHOICES,
         label='Sujet',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bugg ou question...'})
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     sender = forms.EmailField(
         label='Votre email',
+        required=False,
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'votre.email@example.com'})
+    )
+    phone = forms.CharField(
+        label='Votre téléphone',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+33 6 00 00 00 00'})
     )
     message = forms.CharField(
         label='Message',
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'D�crivez votre probl�me ici...'})
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Décrivez votre problème ici...'})
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get('sender') and not cleaned_data.get('phone'):
+            raise forms.ValidationError(
+                "Veuillez renseigner au moins un moyen de contact (email ou téléphone)."
+            )
+        return cleaned_data
 
