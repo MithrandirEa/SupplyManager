@@ -1,6 +1,8 @@
 import ctypes
 import json
 import os
+import shutil
+import subprocess
 import sys
 import urllib.request
 import webbrowser
@@ -99,9 +101,37 @@ def check_update_success():
         print(f"Update success check failed: {e}")
 
 
-def open_browser():
-    # Only open browser if not already running (simple check, or just always open)
-    webbrowser.open('http://127.0.0.1:8000')
+def _find_browser_exe():
+    """Find Edge or Chrome executable for app mode."""
+    candidates = [
+        # Microsoft Edge
+        Path(os.environ.get('PROGRAMFILES(X86)', '')) / 'Microsoft' / 'Edge' / 'Application' / 'msedge.exe',
+        Path(os.environ.get('PROGRAMFILES', '')) / 'Microsoft' / 'Edge' / 'Application' / 'msedge.exe',
+        # Google Chrome
+        Path(os.environ.get('PROGRAMFILES', '')) / 'Google' / 'Chrome' / 'Application' / 'chrome.exe',
+        Path(os.environ.get('PROGRAMFILES(X86)', '')) / 'Google' / 'Chrome' / 'Application' / 'chrome.exe',
+        Path(os.environ.get('LOCALAPPDATA', '')) / 'Google' / 'Chrome' / 'Application' / 'chrome.exe',
+    ]
+    # Also check PATH
+    for name in ('msedge', 'chrome'):
+        found = shutil.which(name)
+        if found:
+            return found
+    for path in candidates:
+        if path.exists():
+            return str(path)
+    return None
+
+
+def open_app_window():
+    """Open the app in a browser window without navigation UI (app mode)."""
+    url = 'http://127.0.0.1:8000'
+    exe = _find_browser_exe()
+    if exe:
+        subprocess.Popen([exe, f'--app={url}', '--new-window'])
+    else:
+        # Fallback to default browser if neither Edge nor Chrome found
+        webbrowser.open(url)
 
 
 class PersistentFile(object):
@@ -187,19 +217,17 @@ if __name__ == '__main__':
         # Initialize Django application
         application = get_wsgi_application()
 
-        # Open browser after a short delay
-        Timer(1.5, open_browser).start()
+        # Open app window after a short delay
+        Timer(1.5, open_app_window).start()
 
         # Check if we just updated (Show Success Message)
         Timer(2.0, check_update_success).start()
 
-        # Start update check in background (after browser opens)
-        # Check updates only if frozen (production) or forced
-        # But for testing, we might want it always. Let's keep it simple.
+        # Start update check in background
         Timer(5.0, check_for_updates).start()
 
         print("Starting server at http://127.0.0.1:8000")
-        # Serve using Waitress
+        # Serve using Waitress (blocks until process exits)
         serve(application, host='127.0.0.1', port=8000, threads=6)
     except Exception as e:
         print(f"CRITICAL STARTUP ERROR: {e}")
