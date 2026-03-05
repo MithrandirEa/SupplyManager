@@ -11,17 +11,9 @@ from authentication.models import User
 from supply.models import Inventory, InventoryEntry, Item
 
 
-class BulkInventoryForm(forms.Form):
-    """
-    Formulaire d'inventaire global : soumet tous les articles avec leur
-    quantité comptée en une seule fois.
-    items_data est un JSON : [{"item_id": 1, "quantity": 5}, ...]
-    """
-    items_data = forms.CharField(widget=forms.HiddenInput())
-    notes = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
-    )
+class ItemsDataValidationMixin:
+    """Mixin de validation pour le champ items_data (JSON d'articles avec quantités)."""
+    _handle_outside_quantity = False
 
     def clean_items_data(self):
         raw = self.cleaned_data['items_data']
@@ -36,8 +28,6 @@ class BulkInventoryForm(forms.Form):
             try:
                 item_id = int(entry['item_id'])
                 quantity = int(entry['quantity'])
-                # outside_quantity est optionnel : s'il n'est pas fourni, on prend 0 ou on traitera dans save()
-                outside_quantity = entry.get('outside_quantity')
             except (KeyError, ValueError, TypeError):
                 raise forms.ValidationError(
                     "Données d'article mal formées."
@@ -46,26 +36,38 @@ class BulkInventoryForm(forms.Form):
                 raise forms.ValidationError(
                     "La quantité ne peut pas être négative."
                 )
-            if outside_quantity is not None and int(outside_quantity) < 0:
-                raise forms.ValidationError(
-                    "La quantité fournisseur ne peut pas être négative."
-                )
+            outside_quantity = None
+            if self._handle_outside_quantity:
+                outside_quantity = entry.get('outside_quantity')
+                if outside_quantity is not None and int(outside_quantity) < 0:
+                    raise forms.ValidationError(
+                        "La quantité fournisseur ne peut pas être négative."
+                    )
             try:
                 item = Item.objects.get(pk=item_id)
             except Item.DoesNotExist:
                 raise forms.ValidationError(
                     f"Article introuvable (id={item_id})."
                 )
-
-            cleaned_item = {
-                'item': item,
-                'quantity': quantity
-            }
+            cleaned_item = {'item': item, 'quantity': quantity}
             if outside_quantity is not None:
                 cleaned_item['outside_quantity'] = int(outside_quantity)
-
             cleaned.append(cleaned_item)
         return cleaned
+
+
+class BulkInventoryForm(ItemsDataValidationMixin, forms.Form):
+    """
+    Formulaire d'inventaire global : soumet tous les articles avec leur
+    quantité comptée en une seule fois.
+    items_data est un JSON : [{"item_id": 1, "quantity": 5}, ...]
+    """
+    _handle_outside_quantity = True
+    items_data = forms.CharField(widget=forms.HiddenInput())
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
 
     def save(self, user=None):
         """Crée l'enregistrement Inventory + InventoryEntry et met à jour les stocks.
@@ -125,7 +127,7 @@ class BulkInventoryForm(forms.Form):
         return inventory
 
 
-class ChangeInventoryForm(forms.Form):
+class ChangeInventoryForm(ItemsDataValidationMixin, forms.Form):
     """
     Formulaire pour modifier un inventaire existant.
     Même champ items_data que BulkInventoryForm, mais update au lieu de create.
@@ -135,34 +137,6 @@ class ChangeInventoryForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
     )
-
-    def clean_items_data(self):
-        raw = self.cleaned_data['items_data']
-        try:
-            entries = json.loads(raw)
-        except (json.JSONDecodeError, TypeError):
-            raise forms.ValidationError("Format des données invalide.")
-        if not isinstance(entries, list) or len(entries) == 0:
-            raise forms.ValidationError("Aucun article fourni.")
-        cleaned = []
-        for entry in entries:
-            try:
-                item_id = int(entry['item_id'])
-                quantity = int(entry['quantity'])
-            except (KeyError, ValueError, TypeError):
-                raise forms.ValidationError("Données d'article mal formées.")
-            if quantity < 0:
-                raise forms.ValidationError(
-                    "La quantité ne peut pas être négative."
-                )
-            try:
-                item = Item.objects.get(pk=item_id)
-            except Item.DoesNotExist:
-                raise forms.ValidationError(
-                    f"Article introuvable (id={item_id})."
-                )
-            cleaned.append({'item': item, 'quantity': quantity})
-        return cleaned
 
     def save(self, inventory):
         """Met à jour un Inventory existant et recalcule les stocks."""

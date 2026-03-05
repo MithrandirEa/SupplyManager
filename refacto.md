@@ -396,11 +396,11 @@ class OrderReceptionService:
    - [x] 2 — Supprimer ou corriger `exports_monthly.py`
 
 2. **Phase 2 — Élimination du code dupliqué** :
-   - [ ] 1.1 — Fusionner `CreateItemForm` / `ChangeItemForm`
-   - [ ] 1.2 — Fusionner `CreateSupplierForm` / `ChangeSupplierForm`
-   - [ ] 1.3 — Extraire la validation JSON des items en mixin
-   - [ ] 1.4 — Extraire la validation des dates de contrat en mixin
-   - [ ] 1.5 — Factoriser `clean_items_data` des formulaires d'inventaire
+   - [x] 1.1 — Fusionner `CreateItemForm` / `ChangeItemForm`
+   - [x] 1.2 — Fusionner `CreateSupplierForm` / `ChangeSupplierForm`
+   - [x] 1.3 — Extraire la validation JSON des items en mixin
+   - [x] 1.4 — Extraire la validation des dates de contrat en mixin
+   - [x] 1.5 — Factoriser `clean_items_data` des formulaires d'inventaire
 
 3. **Phase 3 — Optimisation et nettoyage** :
    - [ ] 9 — Éliminer les requêtes SQL dupliquées du dashboard
