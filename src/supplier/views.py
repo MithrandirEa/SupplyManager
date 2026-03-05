@@ -1,10 +1,17 @@
+import json
+from collections import defaultdict
+from datetime import timedelta
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from authentication.decorators import role_required
-from supplier.forms import ChangeSupplierForm, CreateSupplierForm, Supplier
-from supply.models import Item
+from supplier.forms import ChangeOrderForm, ChangeSupplierForm, CreateSupplierForm, Supplier
+from supplier.models import Order, OrderItem
+from supply.models import Item, ItemsCategory
 
 
 @role_required(['ADMIN', 'DIRECTOR'])
@@ -71,15 +78,6 @@ def delete_supplier(request, supplier_id):
 @login_required
 def change_order(request, order_id):
     """Vue pour modifier une commande"""
-    import json
-    from collections import defaultdict
-
-    from django.contrib import messages
-
-    from supplier.forms import ChangeOrderForm
-    from supplier.models import Order
-    from supply.models import Item, ItemsCategory
-
     order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
@@ -122,10 +120,6 @@ def change_order(request, order_id):
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_order(request, order_id):
     """Vue pour supprimer une commande"""
-    from django.contrib import messages
-
-    from supplier.models import Order
-
     order = get_object_or_404(Order, id=order_id)
     order.delete()
     messages.success(request, 'Commande supprimée avec succès.')
@@ -139,11 +133,6 @@ def receive_order(request, order_id):
     l'utilisateur saisit la quantité reçue pour chaque article.
     Les articles non reçus sont signalés comme restés chez le fournisseur.
     """
-    from django.contrib import messages
-    from django.utils import timezone
-
-    from supplier.models import Order
-
     order = get_object_or_404(
         Order.objects.prefetch_related('order_items__item'),
         id=order_id
@@ -222,8 +211,6 @@ def receive_order(request, order_id):
 
         # Créer une commande reliquat si nécessaire
         if backorder_items:
-            from datetime import timedelta
-
             original_date = order.order_date.strftime('%d/%m/%Y')
 
             # Message de reliquat standardisé
@@ -242,7 +229,6 @@ def receive_order(request, order_id):
                 # On va modifier l'affichage dans le template plutôt que de corrompre le champ status
             )
 
-            from supplier.models import OrderItem
             for item_data in backorder_items:
                 OrderItem.objects.create(
                     order=backorder,

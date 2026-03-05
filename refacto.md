@@ -403,11 +403,11 @@ class OrderReceptionService:
    - [x] 1.5 — Factoriser `clean_items_data` des formulaires d'inventaire
 
 3. **Phase 3 — Optimisation et nettoyage** :
-   - [ ] 9 — Éliminer les requêtes SQL dupliquées du dashboard
-   - [ ] 10 — Optimiser le middleware (throttle)
-   - [ ] 4 — Déplacer les imports en haut des fichiers
-   - [ ] 8 — Centraliser les routes URL
-   - [ ] 7 — Supprimer les fichiers temporaires
+   - [x] 9 — Éliminer les requêtes SQL dupliquées du dashboard
+   - [x] 10 — Optimiser le middleware (throttle)
+   - [x] 4 — Déplacer les imports en haut des fichiers
+   - [x] 8 — Centraliser les routes URL
+   - [x] 7 — Supprimer les fichiers temporaires
 
 4. **Phase 4 — Restructuration** :
    - [ ] 3 — Découper `core/views.py` en sous-modules

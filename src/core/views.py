@@ -1,7 +1,11 @@
+from collections import defaultdict
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.mail import send_mail
+from django.db.models import F, Sum
+from django.db.models.functions import Coalesce, TruncMonth
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
@@ -9,9 +13,27 @@ from django.views.decorators.http import require_http_methods
 from authentication.decorators import role_required
 from authentication.models import User
 from supplier.forms import QuickOrderForm
-from supplier.models import Supplier
-from supply.models import Item
+from supplier.models import Order, OrderItem, Supplier
+from supply.models import Inventory, Item, ItemsCategory
 
+from .exports import (
+    export_inventories_all_detail_csv,
+    export_inventories_all_detail_excel,
+    export_inventories_list_csv,
+    export_inventories_list_excel,
+    export_inventory_detail_csv,
+    export_inventory_detail_excel,
+    export_items_csv,
+    export_items_excel,
+    export_monthly_stats_csv,
+    export_monthly_stats_excel,
+    export_order_detail_csv,
+    export_order_detail_excel,
+    export_orders_all_detail_csv,
+    export_orders_all_detail_excel,
+    export_orders_list_csv,
+    export_orders_list_excel,
+)
 from .forms import (BulkInventoryForm, ChangeInventoryForm, ContactForm,
                     ContractExtensionForm)
 from .services import DashboardService
@@ -25,14 +47,6 @@ def staff_management(request):
 
 @login_required
 def supplies_management(request):
-    from collections import defaultdict
-
-    from django.db.models import F, Sum
-    from django.db.models.functions import Coalesce, TruncMonth
-
-    from supplier.models import Order, OrderItem
-    from supply.models import Inventory, Item
-
     # 1. Récupérer tous les items pour les colonnes du tableau
     all_items = Item.objects.filter(
         is_available=True).order_by('category__name', 'name')
@@ -172,10 +186,6 @@ def print_inventory_sheet(request):
     Vue pour afficher une fiche d'inventaire imprimable.
     ?sort=alpha (par défaut) ou sort=category
     """
-    from collections import defaultdict
-
-    from supply.models import Item
-
     sort = request.GET.get('sort', 'alpha')
     items = Item.objects.filter(is_available=True).select_related('category')
 
@@ -215,10 +225,6 @@ def dashboard(request):
     all_suppliers = Supplier.objects.all().order_by('name')
 
     # Récupération des items groupés par catégorie pour le formulaire
-    from collections import defaultdict
-
-    from supply.models import ItemsCategory
-
     items_by_category = defaultdict(list)
     all_items = Item.objects.filter(
         is_available=True
@@ -229,7 +235,6 @@ def dashboard(request):
         items_by_category[category_name].append(item)
 
     # Récupération des commandes non terminées pour la réception
-    from supplier.models import Order
     pending_orders = Order.objects.filter(
         status__in=['pending', 'delayed']
     ).select_related('supplier').prefetch_related('order_items__item').order_by('expected_return_date')
@@ -347,11 +352,6 @@ def extend_contract_ajax(request):
 @role_required(['ADMIN', 'DIRECTOR'])
 def change_inventory(request, inventory_id):
     """Vue pour modifier un inventaire existant."""
-
-    from collections import defaultdict
-
-    from supply.models import Inventory, Item
-
     inventory = Inventory.objects.prefetch_related(
         'entries__item__category'
     ).get(pk=inventory_id)
@@ -402,7 +402,6 @@ def change_inventory(request, inventory_id):
 @login_required
 def export_items(request):
     """Export CSV ou Excel de tous les articles."""
-    from .exports import export_items_csv, export_items_excel
     fmt = request.GET.get('fmt', 'csv')
     items = Item.objects.select_related('category').prefetch_related(
         'suppliers'
@@ -418,11 +417,6 @@ def export_orders(request):
     Export commandes.
     ?fmt=csv|excel  &  ?scope=list|all-detail
     """
-    from supplier.models import Order
-
-    from .exports import (export_orders_all_detail_csv,
-                          export_orders_all_detail_excel,
-                          export_orders_list_csv, export_orders_list_excel)
     fmt = request.GET.get('fmt', 'csv')
     scope = request.GET.get('scope', 'list')
     orders = Order.objects.select_related('supplier', 'created_by').prefetch_related(
@@ -441,9 +435,6 @@ def export_orders(request):
 @login_required
 def export_order(request, order_id):
     """Export CSV ou Excel du détail d'une commande."""
-    from supplier.models import Order
-
-    from .exports import export_order_detail_csv, export_order_detail_excel
     fmt = request.GET.get('fmt', 'csv')
     order = Order.objects.select_related('supplier').prefetch_related(
         'order_items__item__category'
@@ -459,12 +450,6 @@ def export_inventories(request):
     Export inventaires.
     ?fmt=csv|excel  &  ?scope=list|all-detail
     """
-    from supply.models import Inventory
-
-    from .exports import (export_inventories_all_detail_csv,
-                          export_inventories_all_detail_excel,
-                          export_inventories_list_csv,
-                          export_inventories_list_excel)
     fmt = request.GET.get('fmt', 'csv')
     scope = request.GET.get('scope', 'list')
     inventories = Inventory.objects.select_related('created_by').prefetch_related(
@@ -482,10 +467,6 @@ def export_inventories(request):
 @login_required
 def export_inventory(request, inventory_id):
     """Export CSV ou Excel du détail d'un inventaire."""
-    from supply.models import Inventory
-
-    from .exports import (export_inventory_detail_csv,
-                          export_inventory_detail_excel)
     fmt = request.GET.get('fmt', 'csv')
     inventory = Inventory.objects.select_related('created_by').prefetch_related(
         'entries__item__category'
@@ -498,7 +479,6 @@ def export_inventory(request, inventory_id):
 @login_required
 def export_monthly_stats(request):
     """Export du suivi mensuel."""
-    from .exports import export_monthly_stats_csv, export_monthly_stats_excel
     fmt = request.GET.get('fmt', 'csv')
 
     if fmt == 'excel':
