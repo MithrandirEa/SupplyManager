@@ -5,7 +5,7 @@ from django import forms
 from .models import Order, Supplier
 
 
-class CreateSupplierForm(forms.ModelForm):
+class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = [
@@ -34,36 +34,61 @@ class CreateSupplierForm(forms.ModelForm):
         }
 
 
-class ChangeSupplierForm(forms.ModelForm):
-    class Meta:
-        model = Supplier
-        fields = [
-            'name', 'website', 'contact_email',
-            'phone_number', 'other_details'
-        ]
-        labels = {
-            'name': 'Nom',
-            'website': 'Site web',
-            'contact_email': 'Email de contact',
-            'phone_number': 'Numéro de téléphone',
-            'other_details': 'Informations complémentaires',
-        }
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'website': forms.URLInput(attrs={'class': 'form-control'}),
-            'contact_email': forms.EmailInput(
-                attrs={'class': 'form-control'}
-            ),
-            'phone_number': forms.TextInput(
-                attrs={'class': 'form-control'}
-            ),
-            'other_details': forms.Textarea(
-                attrs={'class': 'form-control', 'rows': 3}
-            ),
-        }
+CreateSupplierForm = SupplierForm
+ChangeSupplierForm = SupplierForm
 
 
-class QuickOrderForm(forms.ModelForm):
+class ItemsValidationMixin:
+    """Mixin de validation commune des items JSON pour les commandes."""
+
+    def clean_items(self):
+        import json
+
+        from supply.models import Item
+
+        items_json = self.cleaned_data.get('items', '[]')
+
+        if not items_json or items_json == '[]':
+            return []
+
+        try:
+            items_data = json.loads(items_json)
+        except json.JSONDecodeError:
+            raise forms.ValidationError("Format d'items invalide.")
+
+        if not items_data:
+            raise forms.ValidationError(
+                "Veuillez ajouter au moins un article \u00e0 la commande."
+            )
+
+        validated_items = []
+        for item_data in items_data:
+            try:
+                if 'item_id' not in item_data or 'quantity' not in item_data:
+                    raise ValueError("Champs requis manquants")
+
+                item_id = int(item_data.get('item_id'))
+                quantity = int(item_data.get('quantity'))
+
+                if quantity <= 0:
+                    raise forms.ValidationError(
+                        "La quantit\u00e9 doit \u00eatre sup\u00e9rieure \u00e0 0."
+                    )
+
+                item = Item.objects.get(pk=item_id)
+                validated_items.append({
+                    'item': item,
+                    'quantity': quantity
+                })
+            except (ValueError, TypeError, Item.DoesNotExist, KeyError):
+                raise forms.ValidationError(
+                    "Article invalide dans la commande."
+                )
+
+        return validated_items
+
+
+class QuickOrderForm(ItemsValidationMixin, forms.ModelForm):
     """
     Formulaire simplifié pour créer une commande rapidement
     depuis le dashboard
@@ -108,54 +133,6 @@ class QuickOrderForm(forms.ModelForm):
             )
         return expected_date
 
-    def clean_items(self):
-        """Valide les items sélectionnés"""
-        import json
-
-        from supply.models import Item
-
-        items_json = self.cleaned_data.get('items', '[]')
-
-        if not items_json or items_json == '[]':
-            return []
-
-        try:
-            items_data = json.loads(items_json)
-        except json.JSONDecodeError:
-            raise forms.ValidationError("Format d'items invalide.")
-
-        if not items_data:
-            raise forms.ValidationError(
-                "Veuillez ajouter au moins un article à la commande."
-            )
-
-        validated_items = []
-        for item_data in items_data:
-            try:
-                # Vérifier que les champs requis sont présents
-                if 'item_id' not in item_data or 'quantity' not in item_data:
-                    raise ValueError("Champs requis manquants")
-
-                item_id = int(item_data.get('item_id'))
-                quantity = int(item_data.get('quantity'))
-
-                if quantity <= 0:
-                    raise forms.ValidationError(
-                        "La quantité doit être supérieure à 0."
-                    )
-
-                item = Item.objects.get(pk=item_id)
-                validated_items.append({
-                    'item': item,
-                    'quantity': quantity
-                })
-            except (ValueError, TypeError, Item.DoesNotExist, KeyError):
-                raise forms.ValidationError(
-                    "Article invalide dans la commande."
-                )
-
-        return validated_items
-
     def save(self, commit=True):
         from django.utils import timezone
 
@@ -199,7 +176,7 @@ class QuickOrderForm(forms.ModelForm):
         return order
 
 
-class ChangeOrderForm(forms.ModelForm):
+class ChangeOrderForm(ItemsValidationMixin, forms.ModelForm):
     """Formulaire pour modifier une commande existante"""
 
     items = forms.CharField(
@@ -243,49 +220,6 @@ class ChangeOrderForm(forms.ModelForm):
             )
 
         return cleaned_data
-
-    def clean_items(self):
-        """Valide les items sélectionnés"""
-        import json
-
-        from supply.models import Item
-
-        items_json = self.cleaned_data.get('items', '[]')
-
-        if not items_json or items_json == '[]':
-            return []
-
-        try:
-            items_data = json.loads(items_json)
-        except json.JSONDecodeError:
-            raise forms.ValidationError("Format d'items invalide.")
-
-        validated_items = []
-        for item_data in items_data:
-            try:
-                # Vérifier que les champs requis sont présents
-                if 'item_id' not in item_data or 'quantity' not in item_data:
-                    raise ValueError("Champs requis manquants")
-
-                item_id = int(item_data.get('item_id'))
-                quantity = int(item_data.get('quantity'))
-
-                if quantity <= 0:
-                    raise forms.ValidationError(
-                        "La quantité doit être supérieure à 0."
-                    )
-
-                item = Item.objects.get(pk=item_id)
-                validated_items.append({
-                    'item': item,
-                    'quantity': quantity
-                })
-            except (ValueError, TypeError, Item.DoesNotExist, KeyError):
-                raise forms.ValidationError(
-                    "Article invalide dans la commande."
-                )
-
-        return validated_items
 
     def save(self, commit=True):
         from supplier.models import OrderItem

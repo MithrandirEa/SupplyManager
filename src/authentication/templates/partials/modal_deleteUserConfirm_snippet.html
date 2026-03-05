@@ -15,7 +15,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <a href="{% url 'delete_user' user_id=user.id %}" class="btn btn-danger">Supprimer</a>
+                <form method="post" action="{% url 'delete_user' user_id=user.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
             </div>
         </div>
     </div>

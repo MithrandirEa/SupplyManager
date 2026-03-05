@@ -36,8 +36,8 @@
                     </td>
                     <td>{{ supplier.phone_number }}</td>
                     <td>
-                        {% if supplier.associated_items.all %}
-                            {% for item in supplier.associated_items.all %}
+                        {% if supplier.items.all %}
+                            {% for item in supplier.items.all %}
                                 <span class="badge bg-info me-1">{{ item.name }}</span>
                             {% endfor %}
                         {% else %}

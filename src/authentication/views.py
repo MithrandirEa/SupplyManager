@@ -1,7 +1,13 @@
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.contrib.auth.forms import PasswordChangeForm
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .decorators import role_required
+from .forms import CustomUserChangeForm, CustomUserCreationForm
+from .models import User
 
 
 @login_required
@@ -17,10 +23,6 @@ def logout_view(request):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def create_user(request):
-    from django.contrib import messages
-
-    from .forms import CustomUserCreationForm
-
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, current_user=request.user)
         if form.is_valid():
@@ -47,12 +49,7 @@ def create_user(request):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def change_user(request, user_id):
-    from django.contrib import messages
-
-    from .forms import CustomUserChangeForm
-    from .models import User
-
-    user = User.objects.get(id=user_id)
+    user = get_object_or_404(User, id=user_id)
 
     # Vérifier si l'utilisateur cible est un Admin et si
     # l'utilisateur connecté n'est pas Admin
@@ -89,13 +86,10 @@ def change_user(request, user_id):
     )
 
 
+@require_POST
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_user(request, user_id):
-    from django.contrib import messages
-
-    from .models import User
-
-    user = User.objects.get(id=user_id)
+    user = get_object_or_404(User, id=user_id)
 
     # Empêcher un utilisateur de se supprimer lui-même
     if user.id == request.user.id:
@@ -122,10 +116,6 @@ def delete_user(request, user_id):
 @login_required
 def change_password(request):
     """Permet à l'utilisateur connecté de modifier son mot de passe."""
-    from django.contrib import messages
-    from django.contrib.auth import update_session_auth_hash
-    from django.contrib.auth.forms import PasswordChangeForm
-
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():

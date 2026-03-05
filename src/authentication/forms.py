@@ -4,7 +4,33 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from .models import User
 
 
-class CustomUserCreationForm(UserCreationForm):
+class CrewContractValidationMixin:
+    """Mixin de validation des dates de contrat pour le r\u00f4le CREW."""
+
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get('role')
+        date_start_contract = cleaned_data.get('date_start_contract')
+        date_end_contract = cleaned_data.get('date_end_contract')
+
+        if role == User.CREW:
+            if not date_start_contract:
+                self.add_error(
+                    'date_start_contract',
+                    'La date de d\u00e9but de contrat est obligatoire pour '
+                    'les membres de l\'\u00e9quipe.'
+                )
+            if not date_end_contract:
+                self.add_error(
+                    'date_end_contract',
+                    'La date de fin de contrat est obligatoire pour '
+                    'les membres de l\'\u00e9quipe.'
+                )
+
+        return cleaned_data
+
+
+class CustomUserCreationForm(CrewContractValidationMixin, UserCreationForm):
     def __init__(self, *args, **kwargs):
         current_user = kwargs.pop('current_user', None)
         super().__init__(*args, **kwargs)
@@ -16,29 +42,6 @@ class CustomUserCreationForm(UserCreationForm):
                 (User.DIRECTOR, 'Responsable'),
                 (User.CREW, 'Équipe'),
             ]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        role = cleaned_data.get('role')
-        date_start_contract = cleaned_data.get('date_start_contract')
-        date_end_contract = cleaned_data.get('date_end_contract')
-
-        # Si le rôle est Équipe, les dates sont obligatoires
-        if role == User.CREW:
-            if not date_start_contract:
-                self.add_error(
-                    'date_start_contract',
-                    'La date de début de contrat est obligatoire pour '
-                    'les membres de l\'\u00e9quipe.'
-                )
-            if not date_end_contract:
-                self.add_error(
-                    'date_end_contract',
-                    'La date de fin de contrat est obligatoire pour '
-                    'les membres de l\'\u00e9quipe.'
-                )
-
-        return cleaned_data
 
     class Meta:
         model = User
@@ -60,7 +63,7 @@ class CustomUserCreationForm(UserCreationForm):
         }
 
 
-class CustomUserChangeForm(UserChangeForm):
+class CustomUserChangeForm(CrewContractValidationMixin, UserChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ajouter les classes Bootstrap aux champs
@@ -73,29 +76,6 @@ class CustomUserChangeForm(UserChangeForm):
                 field.widget.attrs['class'] = 'form-select'
             else:
                 field.widget.attrs['class'] = 'form-control'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        role = cleaned_data.get('role')
-        date_start_contract = cleaned_data.get('date_start_contract')
-        date_end_contract = cleaned_data.get('date_end_contract')
-
-        # Si le rôle est Équipe, les dates sont obligatoires
-        if role == User.CREW:
-            if not date_start_contract:
-                self.add_error(
-                    'date_start_contract',
-                    'La date de début de contrat est obligatoire pour '
-                    'les membres de l\'\u00e9quipe.'
-                )
-            if not date_end_contract:
-                self.add_error(
-                    'date_end_contract',
-                    'La date de fin de contrat est obligatoire pour '
-                    'les membres de l\'\u00e9quipe.'
-                )
-
-        return cleaned_data
 
     def save(self, commit=True):
         from datetime import date
