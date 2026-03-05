@@ -10,7 +10,6 @@ class SupplierAdmin(admin.ModelAdmin):
         'phone_number', 'other_details', 'created_at'
     )
     search_fields = ('name', 'contact_email')
-    filter_horizontal = ('associated_items',)
     readonly_fields = ('created_at', 'updated_at')
 
 

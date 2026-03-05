@@ -24,7 +24,7 @@ def create_supplier(request):
             # Récupérer les items sélectionnés depuis les inputs hidden
             selected_items = request.POST.getlist('associated_items')
             if selected_items:
-                supplier.associated_items.set(selected_items)
+                supplier.items.set(selected_items)
 
             return redirect('suppliers_management')
     else:
@@ -48,7 +48,7 @@ def change_supplier(request, supplier_id):
 
             # Récupérer les items sélectionnés depuis les inputs hidden
             selected_items = request.POST.getlist('associated_items')
-            supplier.associated_items.set(selected_items)
+            supplier.items.set(selected_items)
 
             return redirect('suppliers_management')
     else:
@@ -56,7 +56,7 @@ def change_supplier(request, supplier_id):
 
     all_items = Item.objects.all().order_by('name')
     selected_item_ids = list(
-        supplier.associated_items.values_list('id', flat=True)
+        supplier.items.values_list('id', flat=True)
     )
 
     return render(request, 'change_supplier.html', {

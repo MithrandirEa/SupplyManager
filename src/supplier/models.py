@@ -13,11 +13,6 @@ class Supplier(models.Model):
     other_details = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    associated_items = models.ManyToManyField(
-        'supply.Item',
-        related_name='supplier_set',
-        blank=True
-    )
 
     def __str__(self):
         return self.name
