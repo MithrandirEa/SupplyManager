@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .decorators import role_required
 
@@ -89,6 +90,7 @@ def change_user(request, user_id):
     )
 
 
+@require_POST
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_user(request, user_id):
     from django.contrib import messages

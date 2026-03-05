@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from authentication.decorators import role_required
 from supplier.forms import ChangeSupplierForm, CreateSupplierForm, Supplier
@@ -59,6 +60,7 @@ def change_supplier(request, supplier_id):
     })
 
 
+@require_POST
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_supplier(request, supplier_id):
     supplier = get_object_or_404(Supplier, id=supplier_id)
@@ -116,6 +118,7 @@ def change_order(request, order_id):
     })
 
 
+@require_POST
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_order(request, order_id):
     """Vue pour supprimer une commande"""

@@ -390,8 +390,8 @@ class OrderReceptionService:
 ## Ordre d'implémentation recommandé
 
 1. **Phase 1 — Corrections critiques** (sécurité et stabilité) :
-   - [ ] 6.2 — Passer `DEBUG = False` en production
-   - [ ] 5 — Remplacer `.get()` par `get_object_or_404()`
+   - [x] 6.2 — Passer `DEBUG = False` en production
+   - [x] 5 — Remplacer `.get()` par `get_object_or_404()`
    - [ ] 11 — Ajouter `@require_POST` aux vues de suppression
    - [ ] 2 — Supprimer ou corriger `exports_monthly.py`
 
