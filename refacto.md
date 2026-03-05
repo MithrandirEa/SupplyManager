@@ -248,9 +248,9 @@ alerts_count = {
     'stock': len(dashboard_data['stock_alerts']),
     'orders': len(dashboard_data['order_alerts']),
     'contracts': len(dashboard_data['contract_alerts']),
-    'total': len(dashboard_data['stock_alerts'])
-           + len(dashboard_data['order_alerts'])
-           + len(dashboard_data['contract_alerts']),
+    'total': (len(dashboard_data['stock_alerts'])
+             + len(dashboard_data['order_alerts'])
+             + len(dashboard_data['contract_alerts'])),
 }
 ```
 
