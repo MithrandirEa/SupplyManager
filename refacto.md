@@ -410,7 +410,7 @@ class OrderReceptionService:
    - [x] 7 — Supprimer les fichiers temporaires
 
 4. **Phase 4 — Restructuration** :
-   - [ ] 3 — Découper `core/views.py` en sous-modules
+   - [x] 3 — Découper `core/views.py` en sous-modules
    - [ ] 12 — Résoudre la relation M2M dupliquée
    - [ ] 13 — Extraire `import_items` dans un service
    - [ ] 14 — Extraire `receive_order` dans un service
