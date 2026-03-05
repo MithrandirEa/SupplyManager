@@ -166,6 +166,10 @@ if getattr(sys, 'frozen', False):
 
 if __name__ == '__main__':
     try:
+        # Set AppUserModelID so Windows uses the .exe icon in the taskbar
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            'supplymanager.laundrywatcher')
+
         # Set the Django settings module
         os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                               'LaundryWatcher.settings')
