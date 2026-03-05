@@ -243,14 +243,22 @@ class DashboardService:
         }
 
     @classmethod
-    def get_alerts_count(cls):
+    def get_alerts_count(cls, dashboard_data=None):
         """
         Retourne le nombre total d'alertes pour afficher
         un badge de notification.
+
+        Si dashboard_data est fourni, réutilise les alertes déjà calculées
+        pour éviter des requêtes SQL redondantes.
         """
-        stock_alerts = len(cls.get_stock_anomalies())
-        order_alerts = len(cls.get_order_anomalies())
-        contract_alerts = len(cls.get_contract_anomalies())
+        if dashboard_data is not None:
+            stock_alerts = len(dashboard_data['stock_alerts'])
+            order_alerts = len(dashboard_data['order_alerts'])
+            contract_alerts = len(dashboard_data['contract_alerts'])
+        else:
+            stock_alerts = len(cls.get_stock_anomalies())
+            order_alerts = len(cls.get_order_anomalies())
+            contract_alerts = len(cls.get_contract_anomalies())
 
         return {
             'stock': stock_alerts,

@@ -208,8 +208,8 @@ def dashboard(request):
     # Récupération de toutes les données du dashboard
     dashboard_data = DashboardService.get_all_dashboard_data()
 
-    # Récupération du nombre d'alertes pour l'affichage
-    alerts_count = DashboardService.get_alerts_count()
+    # Calcul du nombre d'alertes à partir des données déjà récupérées
+    alerts_count = DashboardService.get_alerts_count(dashboard_data)
 
     # Récupération des fournisseurs pour le formulaire de commande
     all_suppliers = Supplier.objects.all().order_by('name')
