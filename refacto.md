@@ -392,8 +392,8 @@ class OrderReceptionService:
 1. **Phase 1 — Corrections critiques** (sécurité et stabilité) :
    - [x] 6.2 — Passer `DEBUG = False` en production
    - [x] 5 — Remplacer `.get()` par `get_object_or_404()`
-   - [ ] 11 — Ajouter `@require_POST` aux vues de suppression
-   - [ ] 2 — Supprimer ou corriger `exports_monthly.py`
+   - [x] 11 — Ajouter `@require_POST` aux vues de suppression
+   - [x] 2 — Supprimer ou corriger `exports_monthly.py`
 
 2. **Phase 2 — Élimination du code dupliqué** :
    - [ ] 1.1 — Fusionner `CreateItemForm` / `ChangeItemForm`
