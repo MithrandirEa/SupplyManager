@@ -60,7 +60,7 @@ def create_item(request):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def change_item(request, item_id):
-    item = Item.objects.get(id=item_id)
+    item = get_object_or_404(Item, id=item_id)
     if request.method == 'POST':
         form = ChangeItemForm(request.POST, instance=item)
         if form.is_valid():
@@ -91,7 +91,7 @@ def change_item(request, item_id):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_item(request, item_id):
-    item = Item.objects.get(id=item_id)
+    item = get_object_or_404(Item, id=item_id)
     item.delete()
     return redirect(f"{reverse('supplies_management')}#items")
 

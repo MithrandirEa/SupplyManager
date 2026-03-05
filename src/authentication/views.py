@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .decorators import role_required
 
@@ -52,7 +52,7 @@ def change_user(request, user_id):
     from .forms import CustomUserChangeForm
     from .models import User
 
-    user = User.objects.get(id=user_id)
+    user = get_object_or_404(User, id=user_id)
 
     # Vérifier si l'utilisateur cible est un Admin et si
     # l'utilisateur connecté n'est pas Admin
@@ -95,7 +95,7 @@ def delete_user(request, user_id):
 
     from .models import User
 
-    user = User.objects.get(id=user_id)
+    user = get_object_or_404(User, id=user_id)
 
     # Empêcher un utilisateur de se supprimer lui-même
     if user.id == request.user.id:

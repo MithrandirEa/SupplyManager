@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from authentication.decorators import role_required
 from supplier.forms import ChangeSupplierForm, CreateSupplierForm, Supplier
@@ -32,7 +32,7 @@ def create_supplier(request):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def change_supplier(request, supplier_id):
-    supplier = Supplier.objects.get(id=supplier_id)
+    supplier = get_object_or_404(Supplier, id=supplier_id)
     if request.method == 'POST':
         form = ChangeSupplierForm(request.POST, instance=supplier)
         if form.is_valid():
@@ -61,7 +61,7 @@ def change_supplier(request, supplier_id):
 
 @role_required(['ADMIN', 'DIRECTOR'])
 def delete_supplier(request, supplier_id):
-    supplier = Supplier.objects.get(id=supplier_id)
+    supplier = get_object_or_404(Supplier, id=supplier_id)
     supplier.delete()
     return redirect('suppliers_management')
 
@@ -78,7 +78,7 @@ def change_order(request, order_id):
     from supplier.models import Order
     from supply.models import Item, ItemsCategory
 
-    order = Order.objects.get(id=order_id)
+    order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
         form = ChangeOrderForm(request.POST, instance=order)
@@ -123,7 +123,7 @@ def delete_order(request, order_id):
 
     from supplier.models import Order
 
-    order = Order.objects.get(id=order_id)
+    order = get_object_or_404(Order, id=order_id)
     order.delete()
     messages.success(request, 'Commande supprimée avec succès.')
     return redirect('supplies_management')
@@ -141,9 +141,10 @@ def receive_order(request, order_id):
 
     from supplier.models import Order
 
-    order = Order.objects.prefetch_related(
-        'order_items__item'
-    ).get(id=order_id)
+    order = get_object_or_404(
+        Order.objects.prefetch_related('order_items__item'),
+        id=order_id
+    )
 
     if order.status in ['completed', 'partial']:
         messages.warning(request, 'Cette commande est déjà réceptionnée.')
