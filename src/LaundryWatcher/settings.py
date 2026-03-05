@@ -158,9 +158,9 @@ if getattr(sys, 'frozen', False):
         },
     }
 
-# FINAL DEBUGGING CONFIGURATION
+# FINAL PRODUCTION CONFIGURATION
 if getattr(sys, 'frozen', False):
-    DEBUG = True
+    DEBUG = False
     ALLOWED_HOSTS = ['*']
 
     # Logging setup
